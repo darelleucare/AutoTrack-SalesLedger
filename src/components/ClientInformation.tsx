@@ -1,49 +1,111 @@
+import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
 import { Sale } from '@/types/sales';
 import { StatusBadge } from './StatusBadge';
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ClientInformationProps {
   onSelectSale: (sale: Sale) => void;
 }
 
+type SortDir = 'asc' | 'desc';
+
 export default function ClientInformation({ onSelectSale }: ClientInformationProps) {
   const { sales, updateSale } = useSales();
-
-  // Group sales by client name
-  const grouped = sales.reduce<Record<string, Sale[]>>((acc, s) => {
-    const key = s.clientName || 'Unknown';
-    (acc[key] = acc[key] || []).push(s);
-    return acc;
-  }, {});
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<string>('clientName');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const statusOptions = ['pending', 'released'] as const;
   const arOptions = ['pending', 'paid'] as const;
 
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const filteredSales = useMemo(() => {
+    return sales.filter(s =>
+      !search || [s.clientName, s.cs, s.engineNo, s.chassisNo, s.model].some(f => f.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [sales, search]);
+
+  const grouped = useMemo(() => {
+    const g = filteredSales.reduce<Record<string, Sale[]>>((acc, s) => {
+      const key = s.clientName || 'Unknown';
+      (acc[key] = acc[key] || []).push(s);
+      return acc;
+    }, {});
+    const entries = Object.entries(g);
+    entries.sort(([a], [b]) => {
+      const cmp = a.localeCompare(b);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return entries;
+  }, [filteredSales, sortKey, sortDir]);
+
+  const statusClass = (status: string, type: 'default' | 'ar' = 'default') => {
+    const isGood = type === 'ar' ? status === 'paid' : status === 'released';
+    return isGood ? 'status-released' : 'status-pending';
+  };
+
+  const headers = [
+    { key: 'clientName', label: 'Client Name' },
+    { key: 'address', label: 'Address' },
+    { key: 'contact', label: 'Contact#' },
+    { key: 'vehicle', label: 'Vehicle' },
+    { key: 'bank', label: 'Bank' },
+    { key: 'bankStatus', label: 'Bank Status' },
+    { key: 'ltoStatus', label: 'LTO Status' },
+    { key: 'dealerStatus', label: 'Dealer Status' },
+    { key: 'accountingStatus', label: 'Accounting' },
+    { key: 'arStatus', label: 'AR Status' },
+  ];
+
   return (
     <section id="client-info" className="space-y-3">
-      <h2 className="text-xl font-bold">Client Information</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Client Information</h2>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            className="pl-8 pr-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-1 focus:ring-ring w-60"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
       <div className="border border-border rounded overflow-x-auto bg-card">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted text-left">
-              <th className="px-3 py-2 font-medium">Client Name</th>
-              <th className="px-3 py-2 font-medium">Address</th>
-              <th className="px-3 py-2 font-medium">Contact#</th>
-              <th className="px-3 py-2 font-medium">Vehicle</th>
-              <th className="px-3 py-2 font-medium">Bank</th>
-              <th className="px-3 py-2 font-medium">Bank Status</th>
-              <th className="px-3 py-2 font-medium">LTO Status</th>
-              <th className="px-3 py-2 font-medium">Dealer Status</th>
-              <th className="px-3 py-2 font-medium">Accounting</th>
-              <th className="px-3 py-2 font-medium">AR Status</th>
+              {headers.map(h => (
+                <th
+                  key={h.key}
+                  className="px-3 py-2 font-medium whitespace-nowrap cursor-pointer select-none hover:bg-accent/50"
+                  onClick={() => toggleSort(h.key)}
+                >
+                  <span className="flex items-center gap-1">
+                    {h.label}
+                    {sortKey === h.key && (
+                      sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    )}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {Object.keys(grouped).length === 0 && (
+            {grouped.length === 0 && (
               <tr><td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {Object.entries(grouped).map(([client, clientSales]) =>
+            {grouped.map(([client, clientSales]) =>
               clientSales.map((sale, idx) => (
                 <tr
                   key={sale.id}
@@ -58,10 +120,10 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
                     </>
                   )}
                   <td className="px-3 py-2">{sale.brand} {sale.model}</td>
-                  <td className="px-3 py-2 text-xs">—</td>
+                  <td className="px-3 py-2 text-xs">{sale.bank || 'N/A'}</td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
                       value={sale.bankStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as any }); }}
@@ -71,7 +133,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.ltoStatus)}`}
                       value={sale.ltoStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { ltoStatus: e.target.value as any }); }}
@@ -81,7 +143,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.dealerStatus)}`}
                       value={sale.dealerStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { dealerStatus: e.target.value as any }); }}
@@ -91,7 +153,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.accountingStatus)}`}
                       value={sale.accountingStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { accountingStatus: e.target.value as any }); }}
@@ -101,7 +163,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}
                       value={sale.arStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { arStatus: e.target.value as any }); }}

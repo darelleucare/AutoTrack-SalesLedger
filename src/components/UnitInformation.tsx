@@ -1,21 +1,56 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
 import { Sale } from '@/types/sales';
-import { Search } from 'lucide-react';
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface UnitInformationProps {
   onSelectSale: (sale: Sale) => void;
 }
+
+type SortDir = 'asc' | 'desc';
+
+const fields: { key: keyof Sale; label: string }[] = [
+  { key: 'cs', label: 'CS#' },
+  { key: 'clientName', label: 'Client Name' },
+  { key: 'engineNo', label: 'Engine#' },
+  { key: 'chassisNo', label: 'Chassis#' },
+  { key: 'brand', label: 'Brand' },
+  { key: 'model', label: 'Model' },
+  { key: 'rate', label: 'Rate (%)' },
+  { key: 'cost', label: 'Cost' },
+  { key: 'orCr', label: 'OR/CR' },
+  { key: 'dateRelease', label: 'Date Release' },
+];
 
 export default function UnitInformation({ onSelectSale }: UnitInformationProps) {
   const { sales, updateSale } = useSales();
   const [search, setSearch] = useState('');
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [sortKey, setSortKey] = useState<keyof Sale>('dateRelease');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const filtered = sales.filter(s =>
-    !search || [s.cs, s.clientName, s.engineNo, s.chassisNo, s.model].some(f => f.toLowerCase().includes(search.toLowerCase()))
-  );
+  const toggleSort = (key: keyof Sale) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const filtered = useMemo(() => {
+    let result = sales.filter(s =>
+      !search || [s.cs, s.clientName, s.engineNo, s.chassisNo, s.model].some(f => f.toLowerCase().includes(search.toLowerCase()))
+    );
+    result = [...result].sort((a, b) => {
+      const aVal = String(a[sortKey] ?? '').toLowerCase();
+      const bVal = String(b[sortKey] ?? '').toLowerCase();
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return result;
+  }, [sales, search, sortKey, sortDir]);
 
   const startEdit = (id: string, field: string, value: string) => {
     setEditingCell({ id, field });
@@ -29,19 +64,6 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
       setEditingCell(null);
     }
   };
-
-  const fields: { key: keyof Sale; label: string }[] = [
-    { key: 'cs', label: 'CS#' },
-    { key: 'clientName', label: 'Client Name' },
-    { key: 'engineNo', label: 'Engine#' },
-    { key: 'chassisNo', label: 'Chassis#' },
-    { key: 'brand', label: 'Brand' },
-    { key: 'model', label: 'Model' },
-    { key: 'rate', label: 'Rate' },
-    { key: 'cost', label: 'Cost' },
-    { key: 'orCr', label: 'OR/CR' },
-    { key: 'dateRelease', label: 'Date Release' },
-  ];
 
   return (
     <section id="unit-info" className="space-y-3">
@@ -63,7 +85,18 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
           <thead>
             <tr className="bg-muted text-left">
               {fields.map(f => (
-                <th key={f.key} className="px-3 py-2 font-medium whitespace-nowrap">{f.label}</th>
+                <th
+                  key={f.key}
+                  className="px-3 py-2 font-medium whitespace-nowrap cursor-pointer select-none hover:bg-accent/50"
+                  onClick={() => toggleSort(f.key)}
+                >
+                  <span className="flex items-center gap-1">
+                    {f.label}
+                    {sortKey === f.key && (
+                      sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    )}
+                  </span>
+                </th>
               ))}
             </tr>
           </thead>
@@ -75,7 +108,8 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
               <tr key={sale.id} className="border-t border-border hover:bg-accent/50 transition-colors">
                 {fields.map(f => {
                   const isEditing = editingCell?.id === sale.id && editingCell?.field === f.key;
-                  const value = String(sale[f.key] ?? '');
+                  const rawValue = sale[f.key];
+                  const value = String(rawValue ?? '');
                   return (
                     <td
                       key={f.key}
@@ -93,7 +127,7 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
                         />
                       ) : (
                         <span className={f.key === 'cs' ? 'text-primary font-medium cursor-pointer hover:underline' : ''}>
-                          {['rate', 'cost'].includes(f.key) ? `₱${Number(value).toLocaleString()}` : value}
+                          {f.key === 'rate' ? `${Number(value)}%` : f.key === 'cost' ? `₱${Number(value).toLocaleString()}` : value}
                         </span>
                       )}
                     </td>

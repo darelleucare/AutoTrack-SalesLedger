@@ -78,6 +78,21 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 213 27% 84%;
+
+    /* Darker pastel accents for dark mode */
+    --pastel-blue: 204 60% 20%;
+    --pastel-teal: 166 40% 18%;
+    --pastel-amber: 48 50% 18%;
+    --pastel-purple: 250 40% 20%;
+    --pastel-green: 142 40% 18%;
+    --pastel-red: 0 50% 20%;
+
+    /* Status colors for dark mode */
+    --status-released-bg: 142 40% 18%;
+    --status-released-text: 142 60% 65%;
+    --status-pending-bg: 0 50% 20%;
+    --status-pending-text: 0 70% 70%;
+
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 96%;
     --sidebar-primary: 217 91% 60%;

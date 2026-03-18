@@ -95,6 +95,9 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
           <EditableField label="Brand" field="brand" value={sale.brand} />
           <EditableField label="Model" field="model" value={sale.model} />
           <EditableField label="Unit Cost" field="cost" value={`₱${sale.cost.toLocaleString()}`} />
+          <EditableField label="Bank" field="bank" value={sale.bank || 'N/A'} />
+          <EditableField label="Rate (%)" field="rate" value={`${sale.rate}%`} />
+          <EditableField label="OR/CR" field="orCr" value={sale.orCr} />
           <EditableField label="Branch" field="branch" value={sale.branch} />
         </div>
 

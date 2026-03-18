@@ -21,6 +21,7 @@ export interface Sale {
   orCr: string;
   dateRelease: string;
   branch: string;
+  bank: string;
   clientName: string;
   contact: string;
   address: string;

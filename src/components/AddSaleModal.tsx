@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSales } from '@/store/SalesContext';
 import { Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS } from '@/types/sales';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 interface AddSaleModalProps {
   onClose: () => void;
@@ -21,8 +21,8 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
 
   const [form, setForm] = useState({
     cs: '', engineNo: '', chassisNo: '', brand: '', model: '',
-    cost: '', branch: 'Carmona', clientName: '', contact: '', address: '',
-    rate: '', modeOfPayment: 'cash' as PaymentMode, groupNumber: 1,
+    cost: '', branch: 'Carmona', bank: '', clientName: '', contact: '', address: '',
+    rate: '', orCr: '', modeOfPayment: 'cash' as PaymentMode, groupNumber: 1,
   });
   const [grp, setGrp] = useState<number[]>(defaultGrp(settings.groupCount));
   const [docs, setDocs] = useState(createEmptyDocuments());
@@ -44,9 +44,10 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       model: form.model,
       rate: Number(form.rate) || 0,
       cost: Number(form.cost) || 0,
-      orCr: '',
+      orCr: form.orCr,
       dateRelease: new Date().toISOString().split('T')[0],
       branch: form.branch,
+      bank: form.bank || 'N/A',
       clientName: form.clientName,
       contact: form.contact,
       address: form.address,
@@ -70,6 +71,10 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       [key]: { ...prev[key], [doc]: !prev[key][doc] },
     }));
   };
+
+  const currentPageDocs = PAGES_DOCS[docPage];
+  const checkedCount = currentPageDocs ? Object.values(docs[currentPageDocs.key]).filter(Boolean).length : 0;
+  const totalCount = currentPageDocs ? currentPageDocs.docs.length : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-foreground/20 backdrop-blur-sm">
@@ -110,23 +115,44 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                     {settings.vehicleModels.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
-                <div className="mb-2">
-                  <label className="text-xs text-muted-foreground">Unit Cost *</label>
-                  <input
-                    type="number"
-                    className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                    value={form.cost}
-                    onChange={e => updateField('cost', e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground">Unit Cost *</label>
+                    <input
+                      type="number"
+                      className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={form.cost}
+                      onChange={e => updateField('cost', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Bank</label>
+                    <input
+                      className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      placeholder="N/A"
+                      value={form.bank}
+                      onChange={e => updateField('bank', e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="mb-2">
-                  <label className="text-xs text-muted-foreground">Rate</label>
-                  <input
-                    type="number"
-                    className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                    value={form.rate}
-                    onChange={e => updateField('rate', e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div>
+                    <label className="text-xs text-muted-foreground">Rate (%)</label>
+                    <input
+                      type="number"
+                      className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={form.rate}
+                      onChange={e => updateField('rate', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">OR/CR</label>
+                    <input
+                      className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={form.orCr}
+                      onChange={e => updateField('orCr', e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="mb-2">
                   <label className="text-xs text-muted-foreground">Branch</label>
@@ -215,31 +241,72 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
 
         {step === 'docs' && (
           <div className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
+            {/* Step indicator */}
+            <div className="flex items-center gap-1">
               {PAGES_DOCS.map((p, i) => (
                 <button
                   key={p.key}
                   onClick={() => setDocPage(i)}
-                  className={`px-3 py-1 text-xs rounded font-medium transition-colors ${i === docPage ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full font-medium transition-colors border ${
+                    i === docPage
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : i < docPage
+                      ? 'bg-accent text-accent-foreground border-border'
+                      : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                  }`}
                 >
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-background/20">
+                    {i + 1}
+                  </span>
                   {p.title}
                 </button>
               ))}
             </div>
 
-            <div className="space-y-1.5">
-              <h4 className="font-semibold text-sm">{PAGES_DOCS[docPage].title} Documents</h4>
-              {PAGES_DOCS[docPage].docs.map(doc => (
-                <label key={doc} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 px-2 py-1 rounded">
-                  <input
-                    type="checkbox"
-                    checked={docs[PAGES_DOCS[docPage].key][doc] || false}
-                    onChange={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
-                    className="rounded border-border"
-                  />
-                  {doc}
-                </label>
-              ))}
+            {/* Progress */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%` }}
+                />
+              </div>
+              <span>{checkedCount}/{totalCount} checked</span>
+            </div>
+
+            {/* Document list */}
+            <div className="space-y-1">
+              <h4 className="font-semibold text-sm mb-2">{PAGES_DOCS[docPage].title} Documents</h4>
+              <div className="grid grid-cols-1 gap-1">
+                {PAGES_DOCS[docPage].docs.map(doc => {
+                  const isChecked = docs[PAGES_DOCS[docPage].key][doc] || false;
+                  return (
+                    <label
+                      key={doc}
+                      className={`flex items-center gap-3 text-sm cursor-pointer px-3 py-2 rounded border transition-colors ${
+                        isChecked
+                          ? 'bg-primary/10 border-primary/30'
+                          : 'bg-background border-border hover:bg-accent/50'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
+                        isChecked
+                          ? 'bg-primary border-primary text-primary-foreground'
+                          : 'border-muted-foreground/30'
+                      }`}>
+                        {isChecked && <Check className="w-3 h-3" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
+                        className="sr-only"
+                      />
+                      <span className={isChecked ? 'text-foreground' : 'text-muted-foreground'}>{doc}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             {docPage === PAGES_DOCS.length - 1 && (

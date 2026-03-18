@@ -1,10 +1,13 @@
+import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale, StatusType, ARStatusType, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS } from '@/types/sales';
-import { StatusBadge } from './StatusBadge';
+import { Sale, StatusType, ARStatusType } from '@/types/sales';
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ActivityTrackingProps {
   onSelectSale: (sale: Sale) => void;
 }
+
+type SortDir = 'asc' | 'desc';
 
 function getMissing(docs: Record<string, boolean>): string[] {
   return Object.entries(docs).filter(([, v]) => !v).map(([k]) => k);
@@ -12,21 +15,79 @@ function getMissing(docs: Record<string, boolean>): string[] {
 
 export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps) {
   const { sales, updateSale } = useSales();
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<string>('cs');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const statusOptions = ['pending', 'released'] as const;
   const arOptions = ['pending', 'paid'] as const;
 
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const filtered = useMemo(() => {
+    let result = sales.filter(s =>
+      !search || [s.cs, s.clientName, s.engineNo, s.chassisNo, s.model].some(f => f.toLowerCase().includes(search.toLowerCase()))
+    );
+    result = [...result].sort((a, b) => {
+      const aVal = String((a as any)[sortKey] ?? '').toLowerCase();
+      const bVal = String((b as any)[sortKey] ?? '').toLowerCase();
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return result;
+  }, [sales, search, sortKey, sortDir]);
+
+  const statusClass = (status: string, type: 'default' | 'ar' = 'default') => {
+    const isGood = type === 'ar' ? status === 'paid' : status === 'released';
+    return isGood ? 'status-released' : 'status-pending';
+  };
+
+  const sortableHeaders = [
+    { key: 'cs', label: 'CS#' },
+    { key: 'clientName', label: 'Client' },
+    { key: 'model', label: 'Model' },
+  ];
+
   return (
     <section id="activity" className="space-y-3">
-      <h2 className="text-xl font-bold">Activity Tracking</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Activity Tracking</h2>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            className="pl-8 pr-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-1 focus:ring-ring w-60"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
       <div className="border border-border rounded overflow-x-auto bg-card">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted text-left">
-              <th className="px-3 py-2 font-medium">CS#</th>
-              <th className="px-3 py-2 font-medium">Client</th>
-              <th className="px-3 py-2 font-medium">Model</th>
+              {sortableHeaders.map(h => (
+                <th
+                  key={h.key}
+                  className="px-3 py-2 font-medium cursor-pointer select-none hover:bg-accent/50"
+                  onClick={() => toggleSort(h.key)}
+                >
+                  <span className="flex items-center gap-1">
+                    {h.label}
+                    {sortKey === h.key && (
+                      sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    )}
+                  </span>
+                </th>
+              ))}
               <th className="px-3 py-2 font-medium" colSpan={2}>Bank</th>
               <th className="px-3 py-2 font-medium" colSpan={2}>Accounting</th>
               <th className="px-3 py-2 font-medium" colSpan={2}>Dealer</th>
@@ -49,10 +110,10 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
             </tr>
           </thead>
           <tbody>
-            {sales.length === 0 && (
+            {filtered.length === 0 && (
               <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {sales.map(sale => {
+            {filtered.map(sale => {
               const bankMissing = getMissing(sale.documents.bank);
               const accMissing = getMissing(sale.documents.accounting);
               const dealerMissing = getMissing(sale.documents.dealer);
@@ -69,7 +130,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                   <td className="px-3 py-2">{sale.model}</td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
                       value={sale.bankStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as StatusType }); }}
@@ -78,11 +139,11 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={bankMissing.join(', ')}>
-                    {sale.bankStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : `${bankMissing.length} missing`}
+                    {sale.bankStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{bankMissing.length} missing</span>}
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.accountingStatus)}`}
                       value={sale.accountingStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { accountingStatus: e.target.value as StatusType }); }}
@@ -91,11 +152,11 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={accMissing.join(', ')}>
-                    {sale.accountingStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : `${accMissing.length} missing`}
+                    {sale.accountingStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{accMissing.length} missing</span>}
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.dealerStatus)}`}
                       value={sale.dealerStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { dealerStatus: e.target.value as StatusType }); }}
@@ -104,11 +165,11 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={dealerMissing.join(', ')}>
-                    {sale.dealerStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : `${dealerMissing.length} missing`}
+                    {sale.dealerStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{dealerMissing.length} missing</span>}
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className="text-xs border border-border rounded px-1 py-0.5 bg-card"
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.ltoStatus)}`}
                       value={sale.ltoStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { ltoStatus: e.target.value as StatusType }); }}
@@ -117,11 +178,11 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={ltoMissing.join(', ')}>
-                    {sale.ltoStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : `${ltoMissing.length} missing`}
+                    {sale.ltoStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{ltoMissing.length} missing</span>}
                   </td>
                   <td className="px-3 py-2">
                     <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 bg-card`}
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}
                       value={sale.arStatus}
                       onClick={e => e.stopPropagation()}
                       onChange={e => { e.stopPropagation(); updateSale(sale.id, { arStatus: e.target.value as ARStatusType }); }}
