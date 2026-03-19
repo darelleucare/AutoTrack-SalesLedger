@@ -45,19 +45,44 @@ export default function DocumentChecklistView({ documents, arStatus, onUpdate, o
         ))}
       </div>
 
-      <div className="space-y-1.5">
-        <h4 className="font-semibold text-sm">{currentPage.title} Documents</h4>
-        {currentPage.docs.map(doc => (
-          <label key={doc} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 px-2 py-1 rounded">
-            <input
-              type="checkbox"
-              checked={localDocs[currentPage.key][doc] || false}
-              onChange={() => toggle(doc)}
-              className="rounded border-border"
-            />
-            {doc}
-          </label>
-        ))}
+      {/* Table-style checklist */}
+      <div className="border border-border rounded overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-3 py-2 text-left font-semibold" colSpan={2}>
+                {currentPage.title.toUpperCase()}
+              </th>
+            </tr>
+            <tr className="bg-muted/50">
+              <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground">Document</th>
+              <th className="px-3 py-1.5 text-center text-xs font-medium text-muted-foreground w-24">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentPage.docs.map((doc, idx) => {
+              const isChecked = localDocs[currentPage.key][doc] || false;
+              return (
+                <tr
+                  key={doc}
+                  className={`border-t border-border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-accent/50'} ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
+                  onClick={() => toggle(doc)}
+                >
+                  <td className="px-3 py-2">{doc}</td>
+                  <td className="px-3 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggle(doc)}
+                      onClick={e => e.stopPropagation()}
+                      className="rounded border-border w-4 h-4 accent-primary"
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {isLastPage && (

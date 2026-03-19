@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS } from '@/types/sales';
-import { X, Check } from 'lucide-react';
+import { Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS, formatDateBySettings } from '@/types/sales';
+import { X, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface AddSaleModalProps {
   onClose: () => void;
@@ -18,6 +21,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
   const { addSale, settings } = useSales();
   const [step, setStep] = useState<'info' | 'docs'>('info');
   const [docPage, setDocPage] = useState(0);
+  const [dateRelease, setDateRelease] = useState<Date>(new Date());
 
   const [form, setForm] = useState({
     cs: '', engineNo: '', chassisNo: '', brand: '', model: '',
@@ -45,7 +49,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       rate: Number(form.rate) || 0,
       cost: Number(form.cost) || 0,
       orCr: form.orCr,
-      dateRelease: new Date().toISOString().split('T')[0],
+      dateRelease: format(dateRelease, 'yyyy-MM-dd'),
       branch: form.branch,
       bank: form.bank || 'N/A',
       clientName: form.clientName,
@@ -153,6 +157,27 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                       onChange={e => updateField('orCr', e.target.value)}
                     />
                   </div>
+                </div>
+                {/* Date Release with Calendar */}
+                <div className="mb-2">
+                  <label className="text-xs text-muted-foreground">Date Release</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="w-full flex items-center gap-2 border border-border rounded px-2 py-1.5 text-sm bg-background text-left hover:bg-accent/50">
+                        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                        {formatDateBySettings(format(dateRelease, 'yyyy-MM-dd'), settings)}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateRelease}
+                        onSelect={(d) => d && setDateRelease(d)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="mb-2">
                   <label className="text-xs text-muted-foreground">Branch</label>
@@ -274,39 +299,44 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
               <span>{checkedCount}/{totalCount} checked</span>
             </div>
 
-            {/* Document list */}
-            <div className="space-y-1">
-              <h4 className="font-semibold text-sm mb-2">{PAGES_DOCS[docPage].title} Documents</h4>
-              <div className="grid grid-cols-1 gap-1">
-                {PAGES_DOCS[docPage].docs.map(doc => {
-                  const isChecked = docs[PAGES_DOCS[docPage].key][doc] || false;
-                  return (
-                    <label
-                      key={doc}
-                      className={`flex items-center gap-3 text-sm cursor-pointer px-3 py-2 rounded border transition-colors ${
-                        isChecked
-                          ? 'bg-primary/10 border-primary/30'
-                          : 'bg-background border-border hover:bg-accent/50'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
-                        isChecked
-                          ? 'bg-primary border-primary text-primary-foreground'
-                          : 'border-muted-foreground/30'
-                      }`}>
-                        {isChecked && <Check className="w-3 h-3" />}
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
-                        className="sr-only"
-                      />
-                      <span className={isChecked ? 'text-foreground' : 'text-muted-foreground'}>{doc}</span>
-                    </label>
-                  );
-                })}
-              </div>
+            {/* Table-style checklist */}
+            <div className="border border-border rounded overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="px-3 py-2 text-left font-semibold" colSpan={2}>
+                      {PAGES_DOCS[docPage].title.toUpperCase()}
+                    </th>
+                  </tr>
+                  <tr className="bg-muted/50">
+                    <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground">Document</th>
+                    <th className="px-3 py-1.5 text-center text-xs font-medium text-muted-foreground w-24">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PAGES_DOCS[docPage].docs.map((doc, idx) => {
+                    const isChecked = docs[PAGES_DOCS[docPage].key][doc] || false;
+                    return (
+                      <tr
+                        key={doc}
+                        className={`border-t border-border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-accent/50'} ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
+                        onClick={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
+                      >
+                        <td className="px-3 py-2">{doc}</td>
+                        <td className="px-3 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
+                            onClick={e => e.stopPropagation()}
+                            className="rounded border-border w-4 h-4 accent-primary"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
             {docPage === PAGES_DOCS.length - 1 && (
