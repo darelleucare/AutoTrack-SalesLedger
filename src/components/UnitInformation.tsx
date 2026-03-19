@@ -1,7 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale } from '@/types/sales';
-import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { Sale, formatDateBySettings } from '@/types/sales';
+import { Search, ArrowUp, ArrowDown, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface UnitInformationProps {
   onSelectSale: (sale: Sale) => void;
@@ -23,12 +26,13 @@ const fields: { key: keyof Sale; label: string }[] = [
 ];
 
 export default function UnitInformation({ onSelectSale }: UnitInformationProps) {
-  const { sales, updateSale } = useSales();
+  const { sales, updateSale, settings } = useSales();
   const [search, setSearch] = useState('');
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [sortKey, setSortKey] = useState<keyof Sale>('dateRelease');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [datePickerOpen, setDatePickerOpen] = useState<string | null>(null);
 
   const toggleSort = (key: keyof Sale) => {
     if (sortKey === key) {
@@ -53,6 +57,10 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
   }, [sales, search, sortKey, sortDir]);
 
   const startEdit = (id: string, field: string, value: string) => {
+    if (field === 'dateRelease') {
+      setDatePickerOpen(id);
+      return;
+    }
     setEditingCell({ id, field });
     setEditValue(value);
   };
@@ -110,6 +118,37 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
                   const isEditing = editingCell?.id === sale.id && editingCell?.field === f.key;
                   const rawValue = sale[f.key];
                   const value = String(rawValue ?? '');
+
+                  if (f.key === 'dateRelease') {
+                    const displayDate = formatDateBySettings(value, settings);
+                    return (
+                      <td key={f.key} className="px-3 py-1.5 whitespace-nowrap">
+                        <Popover open={datePickerOpen === sale.id} onOpenChange={(open) => setDatePickerOpen(open ? sale.id : null)}>
+                          <PopoverTrigger asChild>
+                            <button className="flex items-center gap-1.5 text-sm hover:text-primary" onClick={(e) => e.stopPropagation()}>
+                              <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                              {displayDate || '—'}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={value ? new Date(value) : undefined}
+                              onSelect={(date) => {
+                                if (date) {
+                                  updateSale(sale.id, { dateRelease: format(date, 'yyyy-MM-dd') });
+                                }
+                                setDatePickerOpen(null);
+                              }}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                    );
+                  }
+
                   return (
                     <td
                       key={f.key}

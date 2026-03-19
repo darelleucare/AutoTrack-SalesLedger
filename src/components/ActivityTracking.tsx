@@ -13,6 +13,16 @@ function getMissing(docs: Record<string, boolean>): string[] {
   return Object.entries(docs).filter(([, v]) => !v).map(([k]) => k);
 }
 
+function MissingLabel({ missing, status }: { missing: string[]; status: string }) {
+  if (status === 'released') {
+    return <span className="status-released px-1.5 py-0.5 rounded">Complete</span>;
+  }
+  if (missing.length === 0) {
+    return <span className="px-1.5 py-0.5 rounded font-medium" style={{ color: 'hsl(45, 90%, 50%)' }}>Processing</span>;
+  }
+  return <span className="status-pending px-1.5 py-0.5 rounded">{missing.length} missing</span>;
+}
+
 export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps) {
   const { sales, updateSale } = useSales();
   const [search, setSearch] = useState('');
@@ -139,7 +149,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={bankMissing.join(', ')}>
-                    {sale.bankStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{bankMissing.length} missing</span>}
+                    <MissingLabel missing={bankMissing} status={sale.bankStatus} />
                   </td>
                   <td className="px-3 py-2">
                     <select
@@ -152,7 +162,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={accMissing.join(', ')}>
-                    {sale.accountingStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{accMissing.length} missing</span>}
+                    <MissingLabel missing={accMissing} status={sale.accountingStatus} />
                   </td>
                   <td className="px-3 py-2">
                     <select
@@ -165,7 +175,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={dealerMissing.join(', ')}>
-                    {sale.dealerStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{dealerMissing.length} missing</span>}
+                    <MissingLabel missing={dealerMissing} status={sale.dealerStatus} />
                   </td>
                   <td className="px-3 py-2">
                     <select
@@ -178,7 +188,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </select>
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={ltoMissing.join(', ')}>
-                    {sale.ltoStatus === 'released' ? <span className="status-released px-1.5 py-0.5 rounded">Complete</span> : <span className="status-pending px-1.5 py-0.5 rounded">{ltoMissing.length} missing</span>}
+                    <MissingLabel missing={ltoMissing} status={sale.ltoStatus} />
                   </td>
                   <td className="px-3 py-2">
                     <select
