@@ -92,3 +92,28 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export function defaultGrp(count: number): number[] {
   return Array(count).fill(0);
 }
+
+export function formatDateBySettings(dateStr: string, settings: AppSettings): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const day = d.getDate();
+  const month = d.getMonth();
+  const year = d.getFullYear();
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  if (settings.dateLength === 'long') {
+    const monthStr = monthNames[month];
+    if (settings.dateFormat === 'us') return `${monthStr} ${pad(day)}, ${year}`;
+    if (settings.dateFormat === 'eur') return `${pad(day)} ${monthStr} ${year}`;
+    return `${year} ${monthStr} ${pad(day)}`;
+  }
+
+  if (settings.dateFormat === 'us') return `${pad(month + 1)}/${pad(day)}/${year}`;
+  if (settings.dateFormat === 'eur') return `${pad(day)}/${pad(month + 1)}/${year}`;
+  return `${year}/${pad(month + 1)}/${pad(day)}`;
+}
