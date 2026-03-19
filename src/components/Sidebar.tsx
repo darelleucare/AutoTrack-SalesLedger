@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Car, Users, Activity, DollarSign, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Car, Users, Activity, DollarSign, FileBarChart, Settings, Menu, X } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { id: 'client-info', label: 'Client Information', icon: Users },
   { id: 'activity', label: 'Activity Tracking', icon: Activity },
   { id: 'total-gp', label: 'Total Gross Profit', icon: DollarSign },
+  { id: 'reports', label: 'View Reports', icon: FileBarChart, route: '/reports' },
 ];
 
 interface SidebarProps {
