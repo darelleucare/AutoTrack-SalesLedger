@@ -34,7 +34,7 @@ export default function Dashboard({ onSelectSale }: DashboardProps) {
         <SummaryCard title="Units Released" value={totalReleased} colorClass="pastel-card-green" />
         <SummaryCard title="Total GP" value={`₱${totalGP.toLocaleString()}`} colorClass="pastel-card-blue" />
         <SummaryCard title="Bank Pending" value={bankPending} colorClass="pastel-card-red" />
-        <SummaryCard title="Accounting Pending" value={accPending} colorClass="pastel-card-amber" />
+        <SummaryCard title="Acctg. Pending" value={accPending} colorClass="pastel-card-amber" />
         <SummaryCard title="Dealer Pending" value={dealerPending} colorClass="pastel-card-purple" />
         <SummaryCard title="LTO Pending" value={ltoPending} colorClass="pastel-card-teal" />
         <SummaryCard title="AR Pending" value={arPending} colorClass="pastel-card-red" />
