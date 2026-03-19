@@ -16,7 +16,7 @@ interface SidebarProps {
   onRouteNavigate?: (route: string) => void;
 }
 
-export default function Sidebar({ onNavigate, onSettingsClick }: SidebarProps) {
+export default function Sidebar({ onNavigate, onSettingsClick, onRouteNavigate }: SidebarProps) {
   const [open, setOpen] = useState(false);
 
   return (
