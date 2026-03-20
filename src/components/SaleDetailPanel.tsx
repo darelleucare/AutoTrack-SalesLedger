@@ -1,17 +1,10 @@
-import { useState } from 'react';
-import { Sale, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS, DocumentChecklist, ARStatusType, formatDateBySettings } from '@/types/sales';
+import { useState, useMemo } from 'react';
+import { Sale, DocumentChecklist, ARStatusType, formatDateBySettings, isCashOrCopo } from '@/types/sales';
 import { useSales } from '@/store/SalesContext';
 import { X, Save, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
-const PAGES = [
-  { title: 'Bank', docs: BANK_DOCS, key: 'bank' as const },
-  { title: 'Accounting', docs: ACCOUNTING_DOCS, key: 'accounting' as const },
-  { title: 'Dealer', docs: DEALER_DOCS, key: 'dealer' as const },
-  { title: 'LTO', docs: LTO_DOCS, key: 'lto' as const },
-];
 
 interface SaleDetailPanelProps {
   sale: Sale;
@@ -24,8 +17,30 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
   const [editValue, setEditValue] = useState('');
   const [docTab, setDocTab] = useState(0);
 
-  // Local state for batched saving
-  const [localSale, setLocalSale] = useState<Sale>({ ...sale, grp: [...sale.grp], documents: { bank: { ...sale.documents.bank }, accounting: { ...sale.documents.accounting }, dealer: { ...sale.documents.dealer }, lto: { ...sale.documents.lto } } });
+  const [localSale, setLocalSale] = useState<Sale>({
+    ...sale,
+    grp: [...sale.grp],
+    documents: {
+      bank: { ...sale.documents.bank },
+      accounting: { ...sale.documents.accounting },
+      dealer: { ...sale.documents.dealer },
+      lto: { ...sale.documents.lto },
+    },
+  });
+
+  const cashCopo = isCashOrCopo(localSale.modeOfPayment);
+
+  // Build doc pages dynamically — skip bank for cash/copo
+  const docPages = useMemo(() => {
+    const pages: { title: string; key: keyof DocumentChecklist }[] = [];
+    if (!cashCopo) {
+      pages.push({ title: 'Bank', key: 'bank' });
+    }
+    pages.push({ title: 'Accounting', key: 'accounting' });
+    pages.push({ title: 'Dealer', key: 'dealer' });
+    pages.push({ title: 'LTO', key: 'lto' });
+    return pages;
+  }, [cashCopo]);
 
   const totalProfit = localSale.grp.reduce((a, b) => a + b, 0);
 
@@ -63,6 +78,9 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
     }));
   };
 
+  const currentPage = docPages[docTab];
+  const currentDocs = currentPage ? Object.keys(localSale.documents[currentPage.key]) : [];
+
   const EditableField = ({ label, field, value }: { label: string; field: string; value: string }) => (
     <div className="flex justify-between items-center py-1">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -85,8 +103,6 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
       )}
     </div>
   );
-
-  const currentPage = PAGES[docTab];
 
   return (
     <div className="fixed top-0 right-0 w-full md:w-[45%] h-full bg-card border-l border-border z-30 animate-slide-in-right overflow-y-auto">
@@ -116,11 +132,15 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
             <EditableField label="Brand" field="brand" value={localSale.brand} />
             <EditableField label="Model" field="model" value={localSale.model} />
             <EditableField label="Unit Cost" field="cost" value={`₱${localSale.cost.toLocaleString()}`} />
-            <EditableField label="Bank" field="bank" value={localSale.bank || 'N/A'} />
+            <div className="flex justify-between items-center py-1">
+              <span className="text-xs text-muted-foreground">Bank</span>
+              <span className={`text-sm ${cashCopo ? 'status-na px-1.5 py-0.5 rounded' : ''}`}>
+                {cashCopo ? 'N/A' : (localSale.bank || 'N/A')}
+              </span>
+            </div>
             <EditableField label="Rate (%)" field="rate" value={`${localSale.rate}%`} />
             <EditableField label="OR/CR" field="orCr" value={localSale.orCr} />
             <EditableField label="Branch" field="branch" value={localSale.branch} />
-            {/* Date Release with calendar */}
             <div className="flex justify-between items-center py-1">
               <span className="text-xs text-muted-foreground">Date Release</span>
               <Popover>
@@ -169,13 +189,12 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
           </div>
         </div>
 
-        {/* Document Status - inline with tabs */}
+        {/* Document Status */}
         <div className="border border-border rounded p-3 space-y-3">
           <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Document Status</h4>
 
-          {/* Tabs */}
           <div className="flex items-center gap-1">
-            {PAGES.map((p, i) => (
+            {docPages.map((p, i) => (
               <button
                 key={p.key}
                 onClick={() => setDocTab(i)}
@@ -193,39 +212,70 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
             <button
               type="button"
               onClick={() => {
+                if (!currentPage) return;
                 const key = currentPage.key;
-                const allChecked = currentPage.docs.every(d => localSale.documents[key][d]);
+                const allChecked = currentDocs.every(d => localSale.documents[key][d]);
                 setLocalSale(prev => ({
                   ...prev,
                   documents: {
                     ...prev.documents,
-                    [key]: Object.fromEntries(currentPage.docs.map(d => [d, !allChecked])),
+                    [key]: Object.fromEntries(currentDocs.map(d => [d, !allChecked])),
                   },
                 }));
               }}
               className="px-2 py-0.5 text-xs border border-border rounded hover:bg-accent transition-colors"
             >
-              {currentPage.docs.every(d => localSale.documents[currentPage.key][d]) ? 'Uncheck All' : 'Check All'}
+              {currentDocs.every(d => localSale.documents[currentPage?.key || 'bank'][d]) ? 'Uncheck All' : 'Check All'}
             </button>
           </div>
 
-          {/* Checklist */}
-          <div className="space-y-1.5">
-            {currentPage.docs.map(doc => (
-              <label key={doc} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-accent/50 px-2 py-1 rounded">
-                <input
-                  type="checkbox"
-                  checked={localSale.documents[currentPage.key][doc] || false}
-                  onChange={() => toggleDoc(currentPage.key, doc)}
-                  className="rounded border-border"
-                />
-                {doc}
-              </label>
-            ))}
-          </div>
+          {/* Checklist table */}
+          {currentPage && (
+            <div className="border border-border rounded overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted">
+                    <th className="px-3 py-2 text-left font-semibold" colSpan={2}>
+                      {currentPage.title.toUpperCase()}
+                    </th>
+                  </tr>
+                  <tr className="bg-muted/50">
+                    <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground">Document</th>
+                    <th className="px-3 py-1.5 text-center text-xs font-medium text-muted-foreground w-24">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentDocs.map((doc, idx) => {
+                    const isChecked = localSale.documents[currentPage.key][doc] || false;
+                    return (
+                      <tr
+                        key={doc}
+                        className={`border-t border-border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-accent/50'} ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
+                        onClick={() => toggleDoc(currentPage.key, doc)}
+                      >
+                        <td className="px-3 py-2">{doc}</td>
+                        <td className="px-3 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleDoc(currentPage.key, doc)}
+                            onClick={e => e.stopPropagation()}
+                            className="rounded border-border w-4 h-4 accent-primary"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {currentDocs.length === 0 && (
+                    <tr><td colSpan={2} className="px-3 py-4 text-center text-muted-foreground text-xs">No documents</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* AR Status on last tab */}
-          {docTab === PAGES.length - 1 && (
+          {docTab === docPages.length - 1 && (
             <div className="pt-2 border-t border-border">
               <label className="text-sm font-medium">AR Status</label>
               <select

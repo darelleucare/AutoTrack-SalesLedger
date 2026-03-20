@@ -26,7 +26,10 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 
 export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [sales, setSales] = useState<Sale[]>(() => loadFromStorage(SALES_KEY, []));
-  const [settings, setSettings] = useState<AppSettings>(() => loadFromStorage(SETTINGS_KEY, DEFAULT_SETTINGS));
+  const [settings, setSettings] = useState<AppSettings>(() => ({
+    ...DEFAULT_SETTINGS,
+    ...loadFromStorage(SETTINGS_KEY, DEFAULT_SETTINGS),
+  }));
 
   useEffect(() => { localStorage.setItem(SALES_KEY, JSON.stringify(sales)); }, [sales]);
   useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);

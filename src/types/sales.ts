@@ -42,8 +42,13 @@ export interface AppSettings {
   dateLength: 'short' | 'long';
   groupCount: number;
   vehicleModels: string[];
+  accountingDocs: string[];
+  dealerDocs: string[];
+  ltoDocs: string[];
+  bankChecklists: Record<string, string[]>;
 }
 
+// Legacy constants (kept for reference / backward compat)
 export const BANK_DOCS = [
   'Credit Advise', 'VSI', 'LTO Undertaking', 'Standard Insurance',
   'LTO Certification', 'Personal Preferences', 'CFUSCA',
@@ -71,13 +76,39 @@ export const LTO_DOCS = [
   '2 CSR', 'COC LTO Copy', 'Authentication', 'MVIR', 'Onion skin',
 ];
 
-export function createEmptyDocuments(): DocumentChecklist {
+export const DEFAULT_BANK_CHECKLIST = [
+  'Credit Advice',
+  'Vehicle Sales Invoice No',
+  'LTO Undertaking',
+  'Insurance',
+  'LTO Certification to Used Xerox LTO Form',
+  '3 Onion Skin with Motor & 2 Chassis no.',
+  '3 Personal References',
+  'Screenshot Printout of Loan Principal Borrower PPSR',
+  'Authorization To Debit Account',
+  'Amortization Schedule',
+  'CFUSCA with Complete Information of Borrower',
+  'Promissory Note with Chattel Mortgage',
+];
+
+export const CASH_COPO_EXCLUDED_DEALER_DOCS = ['Credit Advise Report'];
+
+export function isCashOrCopo(mode: PaymentMode): boolean {
+  return mode === 'cash' || mode === 'copo';
+}
+
+export function createEmptyDocuments(
+  bankDocs: string[],
+  accountingDocs: string[],
+  dealerDocs: string[],
+  ltoDocs: string[]
+): DocumentChecklist {
   const make = (list: string[]) => Object.fromEntries(list.map(d => [d, false]));
   return {
-    bank: make(BANK_DOCS),
-    accounting: make(ACCOUNTING_DOCS),
-    dealer: make(DEALER_DOCS),
-    lto: make(LTO_DOCS),
+    bank: make(bankDocs),
+    accounting: make(accountingDocs),
+    dealer: make(dealerDocs),
+    lto: make(ltoDocs),
   };
 }
 
@@ -87,6 +118,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateLength: 'short',
   groupCount: 3,
   vehicleModels: ['Vios', 'Hilux', 'Fortuner', 'Innova', 'Wigo', 'Raize', 'Rush', 'Avanza'],
+  accountingDocs: [...ACCOUNTING_DOCS],
+  dealerDocs: [...DEALER_DOCS],
+  ltoDocs: [...LTO_DOCS],
+  bankChecklists: {},
 };
 
 export function defaultGrp(count: number): number[] {

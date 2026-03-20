@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale } from '@/types/sales';
+import { Sale, isCashOrCopo } from '@/types/sales';
 import { StatusBadge } from './StatusBadge';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -106,73 +106,88 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
               <tr><td colSpan={10} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
             {grouped.map(([client, clientSales]) =>
-              clientSales.map((sale, idx) => (
-                <tr
-                  key={sale.id}
-                  className="border-t border-border hover:bg-accent/50 cursor-pointer transition-colors"
-                  onClick={() => onSelectSale(sale)}
-                >
-                  {idx === 0 && (
-                    <>
-                      <td className="px-3 py-2 font-medium align-top" rowSpan={clientSales.length}>{client}</td>
-                      <td className="px-3 py-2 align-top" rowSpan={clientSales.length}>{sale.address}</td>
-                      <td className="px-3 py-2 align-top" rowSpan={clientSales.length}>{sale.contact}</td>
-                    </>
-                  )}
-                  <td className="px-3 py-2">{sale.brand} {sale.model}</td>
-                  <td className="px-3 py-2 text-xs">{sale.bank || 'N/A'}</td>
-                  <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
-                      value={sale.bankStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as any }); }}
-                    >
-                      {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.ltoStatus)}`}
-                      value={sale.ltoStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { ltoStatus: e.target.value as any }); }}
-                    >
-                      {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.dealerStatus)}`}
-                      value={sale.dealerStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { dealerStatus: e.target.value as any }); }}
-                    >
-                      {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.accountingStatus)}`}
-                      value={sale.accountingStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { accountingStatus: e.target.value as any }); }}
-                    >
-                      {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}
-                      value={sale.arStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { arStatus: e.target.value as any }); }}
-                    >
-                      {arOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  </td>
-                </tr>
-              ))
+              clientSales.map((sale, idx) => {
+                const cashCopo = isCashOrCopo(sale.modeOfPayment);
+                return (
+                  <tr
+                    key={sale.id}
+                    className="border-t border-border hover:bg-accent/50 cursor-pointer transition-colors"
+                    onClick={() => onSelectSale(sale)}
+                  >
+                    {idx === 0 && (
+                      <>
+                        <td className="px-3 py-2 font-medium align-top" rowSpan={clientSales.length}>{client}</td>
+                        <td className="px-3 py-2 align-top" rowSpan={clientSales.length}>{sale.address}</td>
+                        <td className="px-3 py-2 align-top" rowSpan={clientSales.length}>{sale.contact}</td>
+                      </>
+                    )}
+                    <td className="px-3 py-2">{sale.brand} {sale.model}</td>
+                    {/* Bank */}
+                    <td className="px-3 py-2 text-xs">
+                      {cashCopo ? (
+                        <span className="status-na px-1.5 py-0.5 rounded">N/A</span>
+                      ) : (
+                        sale.bank || 'N/A'
+                      )}
+                    </td>
+                    {/* Bank Status */}
+                    <td className="px-3 py-2">
+                      {cashCopo ? (
+                        <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>
+                      ) : (
+                        <select
+                          className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
+                          value={sale.bankStatus}
+                          onClick={e => e.stopPropagation()}
+                          onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as any }); }}
+                        >
+                          {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.ltoStatus)}`}
+                        value={sale.ltoStatus}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); updateSale(sale.id, { ltoStatus: e.target.value as any }); }}
+                      >
+                        {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.dealerStatus)}`}
+                        value={sale.dealerStatus}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); updateSale(sale.id, { dealerStatus: e.target.value as any }); }}
+                      >
+                        {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.accountingStatus)}`}
+                        value={sale.accountingStatus}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); updateSale(sale.id, { accountingStatus: e.target.value as any }); }}
+                      >
+                        {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <select
+                        className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}
+                        value={sale.arStatus}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); updateSale(sale.id, { arStatus: e.target.value as any }); }}
+                      >
+                        {arOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

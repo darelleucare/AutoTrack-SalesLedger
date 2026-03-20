@@ -2,15 +2,17 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download } from 'lucide-react';
 import { useSales } from '@/store/SalesContext';
-import { BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS, formatDateBySettings } from '@/types/sales';
+import { formatDateBySettings, isCashOrCopo } from '@/types/sales';
 import Sidebar from '@/components/Sidebar';
 import * as XLSX from 'xlsx';
 
-function docStatus(docs: Record<string, boolean>, list: string[]): string {
-  const checked = list.filter(d => docs[d]).length;
-  if (checked === list.length) return 'Complete';
+function docStatus(docs: Record<string, boolean>): string {
+  const keys = Object.keys(docs);
+  if (keys.length === 0) return 'N/A';
+  const checked = keys.filter(k => docs[k]).length;
+  if (checked === keys.length) return 'Complete';
   if (checked === 0) return 'Processing';
-  return `${list.length - checked} missing`;
+  return `${keys.length - checked} missing`;
 }
 
 export default function FullTable() {
@@ -23,32 +25,34 @@ export default function FullTable() {
   );
 
   const exportToExcel = () => {
-    const data = sorted.map(s => ({
-      'CS#': s.cs,
-      'Engine#': s.engineNo,
-      'Chassis#': s.chassisNo,
-      'Brand': s.brand,
-      'Model': s.model,
-      'Branch': s.branch,
-      'Unit Cost': s.cost,
-      'OR/CR': s.orCr,
-      'Date Release': formatDateBySettings(s.dateRelease, settings),
-      'Client Name': s.clientName,
-      'Contact': s.contact,
-      'Address': s.address,
-      'Mode': s.modeOfPayment.toUpperCase(),
-      'Bank': s.bank || 'N/A',
-      ...Object.fromEntries(s.grp.map((g, i) => [`Grp${i + 1}`, g])),
-      'Gross': s.grp.reduce((a, b) => a + b, 0),
-      'Accounting': docStatus(s.documents.accounting, ACCOUNTING_DOCS),
-      'Dealer': docStatus(s.documents.dealer, DEALER_DOCS),
-      'LTO': docStatus(s.documents.lto, LTO_DOCS),
-      'AR': s.arStatus === 'paid' ? 'Paid' : 'Pending',
-    }));
+    const data = sorted.map(s => {
+      const cashCopo = isCashOrCopo(s.modeOfPayment);
+      return {
+        'CS#': s.cs,
+        'Engine#': s.engineNo,
+        'Chassis#': s.chassisNo,
+        'Brand': s.brand,
+        'Model': s.model,
+        'Branch': s.branch,
+        'Unit Cost': s.cost,
+        'OR/CR': s.orCr,
+        'Date Release': formatDateBySettings(s.dateRelease, settings),
+        'Client Name': s.clientName,
+        'Contact': s.contact,
+        'Address': s.address,
+        'Mode': s.modeOfPayment.toUpperCase(),
+        'Bank': cashCopo ? 'N/A' : (s.bank || 'N/A'),
+        ...Object.fromEntries(s.grp.map((g, i) => [`Grp${i + 1}`, g])),
+        'Gross': s.grp.reduce((a, b) => a + b, 0),
+        'Accounting': docStatus(s.documents.accounting),
+        'Dealer': docStatus(s.documents.dealer),
+        'LTO': docStatus(s.documents.lto),
+        'AR': s.arStatus === 'paid' ? 'Paid' : 'Pending',
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Sales');
-    // Auto-fit column widths
     const colWidths = Object.keys(data[0] || {}).map(key => ({
       wch: Math.max(key.length, ...data.map(r => String((r as any)[key] || '').length)) + 2
     }));
@@ -59,6 +63,13 @@ export default function FullTable() {
   const scrollTo = (id: string) => {
     navigate('/');
     setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 100);
+  };
+
+  const statusColor = (status: string) => {
+    if (status === 'Complete') return 'text-green-600';
+    if (status === 'Processing') return 'text-yellow-500';
+    if (status === 'N/A') return 'text-muted-foreground';
+    return 'text-red-500';
   };
 
   return (
@@ -98,9 +109,10 @@ export default function FullTable() {
           <tbody>
             {sorted.map(s => {
               const gross = s.grp.reduce((a, b) => a + b, 0);
-              const accStatus = docStatus(s.documents.accounting, ACCOUNTING_DOCS);
-              const dlrStatus = docStatus(s.documents.dealer, DEALER_DOCS);
-              const ltoStatus = docStatus(s.documents.lto, LTO_DOCS);
+              const cashCopo = isCashOrCopo(s.modeOfPayment);
+              const accStatus = docStatus(s.documents.accounting);
+              const dlrStatus = docStatus(s.documents.dealer);
+              const ltoStat = docStatus(s.documents.lto);
               return (
                 <tr key={s.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                   <td className="px-2 py-1.5 font-medium whitespace-nowrap">{s.cs}</td>
@@ -116,19 +128,19 @@ export default function FullTable() {
                   <td className="px-2 py-1.5">{s.contact}</td>
                   <td className="px-2 py-1.5">{s.address}</td>
                   <td className="px-2 py-1.5 uppercase">{s.modeOfPayment}</td>
-                  <td className="px-2 py-1.5">{s.bank || 'N/A'}</td>
+                  <td className={`px-2 py-1.5 ${cashCopo ? 'text-muted-foreground' : ''}`}>{cashCopo ? 'N/A' : (s.bank || 'N/A')}</td>
                   {s.grp.map((g, i) => (
                     <td key={i} className="px-2 py-1.5 text-right">₱{g.toLocaleString()}</td>
                   ))}
                   <td className="px-2 py-1.5 text-right font-medium">₱{gross.toLocaleString()}</td>
                   <td className="px-2 py-1.5">
-                    <span className={accStatus === 'Complete' ? 'text-green-600' : accStatus === 'Processing' ? 'text-yellow-500' : 'text-red-500'}>{accStatus}</span>
+                    <span className={statusColor(accStatus)}>{accStatus}</span>
                   </td>
                   <td className="px-2 py-1.5">
-                    <span className={dlrStatus === 'Complete' ? 'text-green-600' : dlrStatus === 'Processing' ? 'text-yellow-500' : 'text-red-500'}>{dlrStatus}</span>
+                    <span className={statusColor(dlrStatus)}>{dlrStatus}</span>
                   </td>
                   <td className="px-2 py-1.5">
-                    <span className={ltoStatus === 'Complete' ? 'text-green-600' : ltoStatus === 'Processing' ? 'text-yellow-500' : 'text-red-500'}>{ltoStatus}</span>
+                    <span className={statusColor(ltoStat)}>{ltoStat}</span>
                   </td>
                   <td className="px-2 py-1.5">
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${s.arStatus === 'paid' ? 'status-released' : 'status-pending'}`}>

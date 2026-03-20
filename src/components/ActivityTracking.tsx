@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale, StatusType, ARStatusType } from '@/types/sales';
+import { Sale, StatusType, ARStatusType, isCashOrCopo } from '@/types/sales';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ActivityTrackingProps {
@@ -13,7 +13,10 @@ function getMissing(docs: Record<string, boolean>): string[] {
   return Object.entries(docs).filter(([, v]) => !v).map(([k]) => k);
 }
 
-function MissingLabel({ missing, status }: { missing: string[]; status: string }) {
+function MissingLabel({ missing, status, isNA }: { missing: string[]; status: string; isNA?: boolean }) {
+  if (isNA) {
+    return <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>;
+  }
   if (status === 'released') {
     return <span className="status-released px-1.5 py-0.5 rounded">Complete</span>;
   }
@@ -124,6 +127,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
               <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
             {filtered.map(sale => {
+              const cashCopo = isCashOrCopo(sale.modeOfPayment);
               const bankMissing = getMissing(sale.documents.bank);
               const accMissing = getMissing(sale.documents.accounting);
               const dealerMissing = getMissing(sale.documents.dealer);
@@ -138,19 +142,25 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                   <td className="px-3 py-2 font-medium text-primary">{sale.cs}</td>
                   <td className="px-3 py-2">{sale.clientName}</td>
                   <td className="px-3 py-2">{sale.model}</td>
+                  {/* Bank Status */}
                   <td className="px-3 py-2">
-                    <select
-                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
-                      value={sale.bankStatus}
-                      onClick={e => e.stopPropagation()}
-                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as StatusType }); }}
-                    >
-                      {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
+                    {cashCopo ? (
+                      <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>
+                    ) : (
+                      <select
+                        className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.bankStatus)}`}
+                        value={sale.bankStatus}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => { e.stopPropagation(); updateSale(sale.id, { bankStatus: e.target.value as StatusType }); }}
+                      >
+                        {statusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    )}
                   </td>
-                  <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={bankMissing.join(', ')}>
-                    <MissingLabel missing={bankMissing} status={sale.bankStatus} />
+                  <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={cashCopo ? 'N/A' : bankMissing.join(', ')}>
+                    <MissingLabel missing={bankMissing} status={sale.bankStatus} isNA={cashCopo} />
                   </td>
+                  {/* Accounting */}
                   <td className="px-3 py-2">
                     <select
                       className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.accountingStatus)}`}
@@ -164,6 +174,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={accMissing.join(', ')}>
                     <MissingLabel missing={accMissing} status={sale.accountingStatus} />
                   </td>
+                  {/* Dealer */}
                   <td className="px-3 py-2">
                     <select
                       className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.dealerStatus)}`}
@@ -177,6 +188,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={dealerMissing.join(', ')}>
                     <MissingLabel missing={dealerMissing} status={sale.dealerStatus} />
                   </td>
+                  {/* LTO */}
                   <td className="px-3 py-2">
                     <select
                       className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.ltoStatus)}`}
@@ -190,6 +202,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                   <td className="px-3 py-2 text-xs max-w-[150px] truncate" title={ltoMissing.join(', ')}>
                     <MissingLabel missing={ltoMissing} status={sale.ltoStatus} />
                   </td>
+                  {/* AR */}
                   <td className="px-3 py-2">
                     <select
                       className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}

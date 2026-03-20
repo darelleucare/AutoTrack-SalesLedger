@@ -39,6 +39,8 @@
     --status-released-text: 143 64% 24%;
     --status-pending-bg: 0 93% 94%;
     --status-pending-text: 0 74% 35%;
+    --status-na-bg: 220 14% 92%;
+    --status-na-text: 220 9% 46%;
 
     /* Pastel accents for cards */
     --pastel-blue: 204 94% 94%;
@@ -92,6 +94,8 @@
     --status-released-text: 142 60% 65%;
     --status-pending-bg: 0 50% 20%;
     --status-pending-text: 0 70% 70%;
+    --status-na-bg: 220 10% 22%;
+    --status-na-text: 220 10% 55%;
 
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 96%;
@@ -122,6 +126,10 @@
   .status-pending {
     background-color: hsl(var(--status-pending-bg));
     color: hsl(var(--status-pending-text));
+  }
+  .status-na {
+    background-color: hsl(var(--status-na-bg));
+    color: hsl(var(--status-na-text));
   }
   .pastel-card-blue {
     background-color: hsl(var(--pastel-blue));

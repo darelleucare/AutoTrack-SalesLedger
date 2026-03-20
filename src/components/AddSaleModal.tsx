@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
-import { Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType, BANK_DOCS, ACCOUNTING_DOCS, DEALER_DOCS, LTO_DOCS, formatDateBySettings } from '@/types/sales';
+import {
+  Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType,
+  DocumentChecklist, isCashOrCopo, CASH_COPO_EXCLUDED_DEALER_DOCS,
+  DEFAULT_BANK_CHECKLIST, formatDateBySettings,
+} from '@/types/sales';
 import { X, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
@@ -9,13 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 interface AddSaleModalProps {
   onClose: () => void;
 }
-
-const PAGES_DOCS = [
-  { title: 'Bank', docs: BANK_DOCS, key: 'bank' as const },
-  { title: 'Accounting', docs: ACCOUNTING_DOCS, key: 'accounting' as const },
-  { title: 'Dealer', docs: DEALER_DOCS, key: 'dealer' as const },
-  { title: 'LTO', docs: LTO_DOCS, key: 'lto' as const },
-];
 
 export default function AddSaleModal({ onClose }: AddSaleModalProps) {
   const { addSale, settings } = useSales();
@@ -29,14 +26,52 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
     rate: '', orCr: '', modeOfPayment: 'cash' as PaymentMode, groupNumber: 1,
   });
   const [grp, setGrp] = useState<number[]>(defaultGrp(settings.groupCount));
-  const [docs, setDocs] = useState(createEmptyDocuments());
+  const [docs, setDocs] = useState<DocumentChecklist>(createEmptyDocuments([], settings.accountingDocs, settings.dealerDocs, settings.ltoDocs));
   const [arStatus, setArStatus] = useState<ARStatusType>('pending');
 
   const updateField = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const cashCopo = isCashOrCopo(form.modeOfPayment);
+
+  const handleModeChange = (value: string) => {
+    const mode = value as PaymentMode;
+    setForm(prev => ({
+      ...prev,
+      modeOfPayment: mode,
+      bank: isCashOrCopo(mode) ? 'N/A' : (prev.bank === 'N/A' ? '' : prev.bank),
+    }));
+  };
+
   const totalGrp = grp.reduce((a, b) => a + b, 0);
 
   const isValid = form.cs && form.engineNo && form.chassisNo && form.brand && form.model && form.cost && form.clientName && form.contact && form.address;
+
+  // Build document pages dynamically
+  const docPages = useMemo(() => {
+    const pages: { title: string; key: keyof DocumentChecklist; docs: string[] }[] = [];
+    if (!cashCopo) {
+      const bankDocs = settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST;
+      pages.push({ title: 'Bank', key: 'bank', docs: bankDocs });
+    }
+    pages.push({ title: 'Accounting', key: 'accounting', docs: settings.accountingDocs });
+    const dealerDocs = cashCopo
+      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      : settings.dealerDocs;
+    pages.push({ title: 'Dealer', key: 'dealer', docs: dealerDocs });
+    pages.push({ title: 'LTO', key: 'lto', docs: settings.ltoDocs });
+    return pages;
+  }, [cashCopo, form.bank, settings]);
+
+  const goToDocs = () => {
+    if (!isValid) return;
+    const bankDocs = cashCopo ? [] : (settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST);
+    const dealerDocs = cashCopo
+      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      : settings.dealerDocs;
+    setDocs(createEmptyDocuments(bankDocs, settings.accountingDocs, dealerDocs, settings.ltoDocs));
+    setDocPage(0);
+    setStep('docs');
+  };
 
   const handleSave = () => {
     const sale: Sale = {
@@ -51,7 +86,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       orCr: form.orCr,
       dateRelease: format(dateRelease, 'yyyy-MM-dd'),
       branch: form.branch,
-      bank: form.bank || 'N/A',
+      bank: cashCopo ? 'N/A' : (form.bank || 'N/A'),
       clientName: form.clientName,
       contact: form.contact,
       address: form.address,
@@ -69,16 +104,18 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
     onClose();
   };
 
-  const toggleDoc = (key: keyof typeof docs, doc: string) => {
+  const toggleDoc = (key: keyof DocumentChecklist, doc: string) => {
     setDocs(prev => ({
       ...prev,
       [key]: { ...prev[key], [doc]: !prev[key][doc] },
     }));
   };
 
-  const currentPageDocs = PAGES_DOCS[docPage];
-  const checkedCount = currentPageDocs ? Object.values(docs[currentPageDocs.key]).filter(Boolean).length : 0;
-  const totalCount = currentPageDocs ? currentPageDocs.docs.length : 0;
+  const currentPage = docPages[docPage];
+  const checkedCount = currentPage ? Object.values(docs[currentPage.key]).filter(Boolean).length : 0;
+  const totalCount = currentPage ? currentPage.docs.length : 0;
+
+  const bankNames = Object.keys(settings.bankChecklists);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 bg-foreground/20 backdrop-blur-sm">
@@ -131,12 +168,29 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground">Bank</label>
-                    <input
-                      className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                      placeholder="N/A"
-                      value={form.bank}
-                      onChange={e => updateField('bank', e.target.value)}
-                    />
+                    {cashCopo ? (
+                      <input
+                        className="w-full border border-border rounded px-2 py-1.5 text-sm bg-muted text-muted-foreground cursor-not-allowed"
+                        value="N/A"
+                        disabled
+                      />
+                    ) : bankNames.length > 0 ? (
+                      <select
+                        className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background"
+                        value={form.bank}
+                        onChange={e => updateField('bank', e.target.value)}
+                      >
+                        <option value="">Select bank</option>
+                        {bankNames.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    ) : (
+                      <input
+                        className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                        placeholder="Enter bank name"
+                        value={form.bank}
+                        onChange={e => updateField('bank', e.target.value)}
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
@@ -158,7 +212,6 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                     />
                   </div>
                 </div>
-                {/* Date Release with Calendar */}
                 <div className="mb-2">
                   <label className="text-xs text-muted-foreground">Date Release</label>
                   <Popover>
@@ -211,7 +264,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                   <select
                     className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background"
                     value={form.modeOfPayment}
-                    onChange={e => updateField('modeOfPayment', e.target.value)}
+                    onChange={e => handleModeChange(e.target.value)}
                   >
                     <option value="cash">Cash</option>
                     <option value="fin">FIN</option>
@@ -254,7 +307,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
             <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <button onClick={onClose} className="px-4 py-1.5 text-sm border border-border rounded hover:bg-accent">Cancel</button>
               <button
-                onClick={() => isValid && setStep('docs')}
+                onClick={goToDocs}
                 disabled={!isValid}
                 className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50"
               >
@@ -268,7 +321,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
           <div className="p-4 space-y-4">
             {/* Step indicator */}
             <div className="flex items-center gap-1">
-              {PAGES_DOCS.map((p, i) => (
+              {docPages.map((p, i) => (
                 <button
                   key={p.key}
                   onClick={() => setDocPage(i)}
@@ -300,11 +353,12 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
               <button
                 type="button"
                 onClick={() => {
-                  const key = PAGES_DOCS[docPage].key;
+                  if (!currentPage) return;
+                  const key = currentPage.key;
                   const allChecked = checkedCount === totalCount;
                   setDocs(prev => ({
                     ...prev,
-                    [key]: Object.fromEntries(PAGES_DOCS[docPage].docs.map(d => [d, !allChecked])),
+                    [key]: Object.fromEntries(currentPage.docs.map(d => [d, !allChecked])),
                   }));
                 }}
                 className="px-2 py-0.5 text-xs border border-border rounded hover:bg-accent transition-colors"
@@ -314,46 +368,48 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
             </div>
 
             {/* Table-style checklist */}
-            <div className="border border-border rounded overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted">
-                    <th className="px-3 py-2 text-left font-semibold" colSpan={2}>
-                      {PAGES_DOCS[docPage].title.toUpperCase()}
-                    </th>
-                  </tr>
-                  <tr className="bg-muted/50">
-                    <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground">Document</th>
-                    <th className="px-3 py-1.5 text-center text-xs font-medium text-muted-foreground w-24">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {PAGES_DOCS[docPage].docs.map((doc, idx) => {
-                    const isChecked = docs[PAGES_DOCS[docPage].key][doc] || false;
-                    return (
-                      <tr
-                        key={doc}
-                        className={`border-t border-border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-accent/50'} ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
-                        onClick={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
-                      >
-                        <td className="px-3 py-2">{doc}</td>
-                        <td className="px-3 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => toggleDoc(PAGES_DOCS[docPage].key, doc)}
-                            onClick={e => e.stopPropagation()}
-                            className="rounded border-border w-4 h-4 accent-primary"
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {currentPage && (
+              <div className="border border-border rounded overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="px-3 py-2 text-left font-semibold" colSpan={2}>
+                        {currentPage.title.toUpperCase()}
+                      </th>
+                    </tr>
+                    <tr className="bg-muted/50">
+                      <th className="px-3 py-1.5 text-left text-xs font-medium text-muted-foreground">Document</th>
+                      <th className="px-3 py-1.5 text-center text-xs font-medium text-muted-foreground w-24">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentPage.docs.map((doc, idx) => {
+                      const isChecked = docs[currentPage.key][doc] || false;
+                      return (
+                        <tr
+                          key={doc}
+                          className={`border-t border-border cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-accent/50'} ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
+                          onClick={() => toggleDoc(currentPage.key, doc)}
+                        >
+                          <td className="px-3 py-2">{doc}</td>
+                          <td className="px-3 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleDoc(currentPage.key, doc)}
+                              onClick={e => e.stopPropagation()}
+                              className="rounded border-border w-4 h-4 accent-primary"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-            {docPage === PAGES_DOCS.length - 1 && (
+            {docPage === docPages.length - 1 && (
               <div className="pt-2 border-t border-border">
                 <label className="text-sm font-medium">AR Status</label>
                 <select
@@ -374,7 +430,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
               >
                 Back
               </button>
-              {docPage === PAGES_DOCS.length - 1 ? (
+              {docPage === docPages.length - 1 ? (
                 <button
                   onClick={handleSave}
                   className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:opacity-90"
