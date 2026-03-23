@@ -15,6 +15,16 @@ function docStatus(docs: Record<string, boolean>): string {
   return `${keys.length - checked} missing`;
 }
 
+function getStatusColor(status: string): string {
+  if (status === 'Complete') return '90EE90';
+  if (status === 'Processing') return 'FFFF00';
+  if (status === 'N/A') return 'D3D3D3';
+  if (status?.includes('missing')) return 'FF6B6B';
+  if (status === 'Pending') return 'FF6B6B';
+  if (status === 'Paid') return '90EE90';
+  return 'FFFFFF';
+}
+
 export default function FullTable() {
   const navigate = useNavigate();
   const { sales, settings } = useSales();
@@ -23,6 +33,7 @@ export default function FullTable() {
     [...sales].sort((a, b) => (b.dateRelease || '').localeCompare(a.dateRelease || '')),
     [sales]
   );
+  
 
   const exportToExcel = () => {
     const data = sorted.map(s => {
@@ -51,6 +62,43 @@ export default function FullTable() {
       };
     });
     const ws = XLSX.utils.json_to_sheet(data);
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    // Style header row (yellow background, bold text)
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (ws[cell]) {
+        ws[cell].s = {
+          fill: { fgColor: { rgb: 'FFFF00' } },
+          font: { bold: true, color: { rgb: '000000' } },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      }
+    }
+
+    // Calculate column positions for status columns
+    const baseColumns = 14;
+    const accCol = baseColumns + settings.groupCount;
+    const dlrCol = accCol + 1;
+    const ltoCol = dlrCol + 1;
+    const arCol = ltoCol + 1;
+
+    // Apply status styling to data rows
+    for (let row = 1; row <= data.length; row++) {
+      const statusCols = [accCol, dlrCol, ltoCol, arCol];
+      for (const col of statusCols) {
+        const cell = XLSX.utils.encode_cell({ r: row, c: col });
+        if (ws[cell]) {
+          const bgColor = getStatusColor(ws[cell].v);
+          ws[cell].s = {
+            fill: { fgColor: { rgb: bgColor } },
+            font: { bold: true, color: { rgb: '000000' } },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        }
+      }
+    }
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Sales');
     const colWidths = Object.keys(data[0] || {}).map(key => ({

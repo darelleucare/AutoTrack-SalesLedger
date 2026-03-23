@@ -104,6 +104,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       ltoStatus: 'pending',
       arStatus,
       modeOfPayment: form.modeOfPayment,
+      groupNumber: 1,
       documents: docs,
     };
     addSale(sale);
