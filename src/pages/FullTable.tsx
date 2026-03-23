@@ -15,16 +15,6 @@ function docStatus(docs: Record<string, boolean>): string {
   return `${keys.length - checked} missing`;
 }
 
-function getStatusColor(status: string): string {
-  if (status === 'Complete') return '90EE90';
-  if (status === 'Processing') return 'FFFF00';
-  if (status === 'N/A') return 'D3D3D3';
-  if (status?.includes('missing')) return 'FF6B6B';
-  if (status === 'Pending') return 'FF6B6B';
-  if (status === 'Paid') return '90EE90';
-  return 'FFFFFF';
-}
-
 export default function FullTable() {
   const navigate = useNavigate();
   const { sales, settings } = useSales();
@@ -36,76 +26,48 @@ export default function FullTable() {
   
 
   const exportToExcel = () => {
-    const data = sorted.map(s => {
-      const cashCopo = isCashOrCopo(s.modeOfPayment);
-      return {
-        'CS#': s.cs,
-        'Engine#': s.engineNo,
-        'Chassis#': s.chassisNo,
-        'Brand': s.brand,
-        'Model': s.model,
-        'Branch': s.branch,
-        'Unit Cost': s.cost,
-        'OR/CR': s.orCr,
-        'Date Release': formatDateBySettings(s.dateRelease, settings),
-        'Client Name': s.clientName,
-        'Contact': s.contact,
-        'Address': s.address,
-        'Mode': s.modeOfPayment.toUpperCase(),
-        'Bank': cashCopo ? 'N/A' : (s.bank || 'N/A'),
-        ...Object.fromEntries(s.grp.map((g, i) => [`Grp${i + 1}`, g])),
-        'Gross': s.grp.reduce((a, b) => a + b, 0),
-        'Accounting': docStatus(s.documents.accounting),
-        'Dealer': docStatus(s.documents.dealer),
-        'LTO': docStatus(s.documents.lto),
-        'AR': s.arStatus === 'paid' ? 'Paid' : 'Pending',
-      };
-    });
-    const ws = XLSX.utils.json_to_sheet(data);
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
-
-    // Style header row (yellow background, bold text)
-    for (let col = range.s.c; col <= range.e.c; col++) {
-      const cell = XLSX.utils.encode_cell({ r: 0, c: col });
-      if (ws[cell]) {
-        ws[cell].s = {
-          fill: { fgColor: { rgb: 'FFFF00' } },
-          font: { bold: true, color: { rgb: '000000' } },
-          alignment: { horizontal: 'center', vertical: 'center' }
+    try {
+      const data = sorted.map(s => {
+        const cashCopo = isCashOrCopo(s.modeOfPayment);
+        return {
+          'CS#': s.cs,
+          'Engine#': s.engineNo,
+          'Chassis#': s.chassisNo,
+          'Brand': s.brand,
+          'Model': s.model,
+          'Branch': s.branch,
+          'Unit Cost': s.cost,
+          'OR/CR': s.orCr,
+          'Date Release': formatDateBySettings(s.dateRelease, settings),
+          'Client Name': s.clientName,
+          'Contact': s.contact,
+          'Address': s.address,
+          'Mode': s.modeOfPayment.toUpperCase(),
+          'Bank': cashCopo ? 'N/A' : (s.bank || 'N/A'),
+          ...Object.fromEntries(s.grp.map((g, i) => [`Grp${i + 1}`, g])),
+          'Gross': s.grp.reduce((a, b) => a + b, 0),
+          'Accounting': docStatus(s.documents.accounting),
+          'Dealer': docStatus(s.documents.dealer),
+          'LTO': docStatus(s.documents.lto),
+          'AR': s.arStatus === 'paid' ? 'Paid' : 'Pending',
         };
-      }
+      });
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sales');
+
+      // Auto-calculate column widths
+      const colWidths = Object.keys(data[0] || {}).map(key => ({
+        wch: Math.max(key.length, ...data.map(r => String((r as any)[key] || '').length)) + 2
+      }));
+      ws['!cols'] = colWidths;
+
+      XLSX.writeFile(wb, 'VehicleSales_FullTable.xlsx');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export. Please try again.');
     }
-
-    // Calculate column positions for status columns
-    const baseColumns = 14;
-    const accCol = baseColumns + settings.groupCount;
-    const dlrCol = accCol + 1;
-    const ltoCol = dlrCol + 1;
-    const arCol = ltoCol + 1;
-
-    // Apply status styling to data rows
-    for (let row = 1; row <= data.length; row++) {
-      const statusCols = [accCol, dlrCol, ltoCol, arCol];
-      for (const col of statusCols) {
-        const cell = XLSX.utils.encode_cell({ r: row, c: col });
-        if (ws[cell]) {
-          const bgColor = getStatusColor(ws[cell].v);
-          ws[cell].s = {
-            fill: { fgColor: { rgb: bgColor } },
-            font: { bold: true, color: { rgb: '000000' } },
-            alignment: { horizontal: 'center', vertical: 'center' }
-          };
-        }
-      }
-    }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales');
-    const colWidths = Object.keys(data[0] || {}).map(key => ({
-      wch: Math.max(key.length, ...data.map(r => String((r as any)[key] || '').length)) + 2
-    }));
-    ws['!cols'] = colWidths;
-    XLSX.writeFile(wb, 'VehicleSales_FullTable.xlsx');
   };
 
   const scrollTo = (id: string) => {

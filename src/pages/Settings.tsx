@@ -72,7 +72,7 @@ export default function SettingsPage() {
   const bankNames = Object.keys(settings.bankChecklists);
 
   return (
-    <div className="min-h-screen bg-background p-6 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-web-bg p-6 max-w-2xl mx-auto">
       <button onClick={() => navigate('/')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </button>

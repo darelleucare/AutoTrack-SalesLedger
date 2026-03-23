@@ -4,7 +4,8 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --web-bg: 0 0% 0%;
+    --background: 210 40% 98% / 0.5;
     --foreground: 215 28% 17%;
 
     --card: 0 0% 100%;
@@ -106,6 +107,27 @@
     --sidebar-border: 222 47% 12%;
     --sidebar-ring: 217 91% 60%;
   }
+  .bg-web-bg {
+    @apply bg-background;
+    position: relative;
+    
+  }
+  
+  .bg-web-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100% ;
+    background-image: url('/../public/bg-img-logo.png');
+    background-size: 35%;
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
 @layer base {
@@ -116,6 +138,7 @@
     @apply bg-background text-foreground font-sans;
     font-family: 'Inter', sans-serif;
   }
+  
 }
 
 @layer components {

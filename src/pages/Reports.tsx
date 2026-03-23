@@ -42,7 +42,7 @@ export default function Reports() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-web-bg">
       <Sidebar onNavigate={scrollTo} onSettingsClick={() => navigate('/settings')} onRouteNavigate={(r) => navigate(r)} />
 
       <header className="sticky top-0 z-20 bg-card border-b border-border px-4 py-2.5 flex items-center gap-4">
