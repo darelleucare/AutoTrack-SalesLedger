@@ -9,6 +9,7 @@ import { X, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AddSaleModalProps {
   onClose: () => void;
@@ -174,22 +175,17 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                         value="N/A"
                         disabled
                       />
-                    ) : bankNames.length > 0 ? (
-                      <select
-                        className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background"
-                        value={form.bank}
-                        onChange={e => updateField('bank', e.target.value)}
-                      >
-                        <option value="">Select bank</option>
-                        {bankNames.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
                     ) : (
-                      <input
-                        className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                        placeholder="Enter bank name"
-                        value={form.bank}
-                        onChange={e => updateField('bank', e.target.value)}
-                      />
+                      <Select value={form.bank} onValueChange={v => updateField('bank', v)}>
+                        <SelectTrigger className="w-full h-[34px] text-sm">
+                          <SelectValue placeholder="Select bank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {bankNames.map(b => (
+                            <SelectItem key={b} value={b}>{b}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
                   </div>
                 </div>

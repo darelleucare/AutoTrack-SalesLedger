@@ -112,6 +112,50 @@ export function createEmptyDocuments(
   };
 }
 
+export const DEFAULT_BANK_CHECKLISTS: Record<string, string[]> = {
+  'EWB': [
+    'Credit Advice', 'Vehicle Sales Invoice No.', 'LTO Undertaking', 'Insurance',
+    'LTO Certification to Used Xerox LTO Form', '3 Onion Skin w/ Motor & 2 Chassis No.',
+    '3 Personal References', 'Screenshot Printout Of Loan Principal Borrower PPSR',
+    'Screenshot Printout Of Loan Co Borrower PPSR', 'Supplemental Credit Advice for LTO Use',
+    'Picture Of Receiving Unit', 'Bank Requirements', 'Authorization to Debit Account',
+    'Amortization Schedule', 'CFUSCA w/ Complete Information Of Borrower',
+    'Deed Of Undertaking', 'Promissory Note W/ Chattel Mortgage',
+  ],
+  'BPI': [
+    'Credit Advice', 'Vehicle Sales Invoice No.', 'LTO Undertaking', 'Insurance',
+    'LTO Certification to Used Xerox LTO Form', '3 Onion Skin w/ Motor & Chassis No.',
+    '2 Xerox Form LTO Form W/ Motor & Chassis No.', '3 Personal References',
+    'Screenshot Printout of Loan Borrower -PPSR', 'VRF',
+    'Credit Advice Report Requirements', 'BPI Auto Loan Form', 'SBLA Form',
+    'Authorization to Debit Account', 'Amortization Schedule',
+    'CFUSCA w/ Complete Information of Borrower', 'Deed of Assignment',
+    'Promissory Note w/ Chattel Mortgage',
+  ],
+  'PSB': [
+    'Credit Advice', '(Blue) Vehicle Sales Invoice No.', 'LTO Undertaking', 'Insurance',
+    'One and the Same', 'LTO Certification to Used Xerox LTO Form',
+    '3 Onion Skin w/ Motor & Chassis No.', '2 Xerox Form LTO Form w/ Motor & Chassis No.',
+    '3 Personal References', 'Screenshot Printout of Loan Borrower - PPSR',
+    'Credit Advice Report Requirements', 'Affidavit of Non-Commercial Use',
+    'Letter of Due Date', 'Amortization Schedule',
+    'CFUSCA w/ Complete Information of Borrower', 'Promissory Note w/ Chattel Mortgage',
+  ],
+  'BDO': [
+    'Credit Advice', 'Vehicle Sales Invoice', 'LTO Undertaking',
+    'LTO Certification to Used Xerox LTO Form', '3 Onion Skin w/ 2 Motor & Chassis No.',
+    '3 Personal References', 'Picture of Client Receiving the Unit',
+    'Screenshot Printout of Loan Borrower/S - PPSR', 'Screenshot Printout of LTO Portal',
+    'Bank Requirements', '3 Major Trade References', 'Automatic Debit Agreement',
+    'BDO-Credit Advice', 'Supplemental Form for OGB - Principal Borrower',
+    'Auto Loans Supplemental KYC Form - Principal Borrower',
+    'Related Party Questionnaire - Exhibit 2', 'Related Party Questionnaire - Exhibit 3',
+    'Certificate of Correction', 'CFUSCA - A1-A2 / C1 - C5 Of Borrower',
+    'Affidavit Of Marital Consent', 'Disclosure Statement', 'Endorsement & Assignment',
+    'Acknowledgement', 'Promissory Note w/ Security Agreement',
+  ],
+};
+
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'light',
   dateFormat: 'us',
@@ -121,7 +165,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   accountingDocs: [...ACCOUNTING_DOCS],
   dealerDocs: [...DEALER_DOCS],
   ltoDocs: [...LTO_DOCS],
-  bankChecklists: {},
+  bankChecklists: { ...DEFAULT_BANK_CHECKLISTS },
 };
 
 export function defaultGrp(count: number): number[] {
