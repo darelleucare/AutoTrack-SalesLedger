@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
 import {
   Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType,
-  DocumentChecklist, isCashOrCopo, CASH_COPO_EXCLUDED_DEALER_DOCS,
+  DocumentChecklist, isCashOrCopo, CASH_COPO_EXCLUDED_DEALER_DOCS, CASH_COPO_EXCLUDED_ACCOUNTING_DOCS,
   DEFAULT_BANK_CHECKLIST, formatDateBySettings,
 } from '@/types/sales';
 import { X, CalendarIcon } from 'lucide-react';
@@ -54,7 +54,10 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       const bankDocs = settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST;
       pages.push({ title: 'Bank', key: 'bank', docs: bankDocs });
     }
-    pages.push({ title: 'Accounting', key: 'accounting', docs: settings.accountingDocs });
+    const accountingDocs = cashCopo
+      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      : settings.accountingDocs;
+    pages.push({ title: 'Accounting', key: 'accounting', docs: accountingDocs });
     const dealerDocs = cashCopo
       ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
       : settings.dealerDocs;
@@ -66,10 +69,13 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
   const goToDocs = () => {
     if (!isValid) return;
     const bankDocs = cashCopo ? [] : (settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST);
+    const accountingDocs = cashCopo
+      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      : settings.accountingDocs;
     const dealerDocs = cashCopo
       ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
       : settings.dealerDocs;
-    setDocs(createEmptyDocuments(bankDocs, settings.accountingDocs, dealerDocs, settings.ltoDocs));
+    setDocs(createEmptyDocuments(bankDocs, accountingDocs, dealerDocs, settings.ltoDocs));
     setDocPage(0);
     setStep('docs');
   };

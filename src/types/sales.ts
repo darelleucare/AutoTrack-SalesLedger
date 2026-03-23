@@ -92,6 +92,7 @@ export const DEFAULT_BANK_CHECKLIST = [
 ];
 
 export const CASH_COPO_EXCLUDED_DEALER_DOCS = ['Credit Advise Report'];
+export const CASH_COPO_EXCLUDED_ACCOUNTING_DOCS = ['Credit Application', 'Transmittal (Received by Bank)', 'Tracker (Transmitted)'];
 
 export function isCashOrCopo(mode: PaymentMode): boolean {
   return mode === 'cash' || mode === 'copo';
