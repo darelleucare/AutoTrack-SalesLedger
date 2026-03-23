@@ -57,7 +57,7 @@ export default function FullTable() {
       wch: Math.max(key.length, ...data.map(r => String((r as any)[key] || '').length)) + 2
     }));
     ws['!cols'] = colWidths;
-    XLSX.writeFile(wb, 'vehicle_sales_export.xlsx');
+    XLSX.writeFile(wb, 'VehicleSales_FullTable.xlsx');
   };
 
   const scrollTo = (id: string) => {

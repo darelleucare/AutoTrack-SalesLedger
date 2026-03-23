@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Sale, AppSettings, DEFAULT_SETTINGS } from '@/types/sales';
+import { getDb, writeDb } from '@/lib/db';
 
 interface SalesContextType {
   sales: Sale[];
@@ -12,27 +13,44 @@ interface SalesContextType {
 
 const SalesContext = createContext<SalesContextType | null>(null);
 
-const SALES_KEY = 'vst_sales';
-const SETTINGS_KEY = 'vst_settings';
-
-function loadFromStorage<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export function SalesProvider({ children }: { children: React.ReactNode }) {
-  const [sales, setSales] = useState<Sale[]>(() => loadFromStorage(SALES_KEY, []));
-  const [settings, setSettings] = useState<AppSettings>(() => ({
-    ...DEFAULT_SETTINGS,
-    ...loadFromStorage(SETTINGS_KEY, DEFAULT_SETTINGS),
-  }));
+  const [sales, setSales] = useState<Sale[]>(() => {
+    try {
+      const db = getDb();
+      return db.data.sales || [];
+    } catch {
+      return [];
+    }
+  });
+  
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
+      const db = getDb();
+      return db.data.settings || DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
+  });
 
-  useEffect(() => { localStorage.setItem(SALES_KEY, JSON.stringify(sales)); }, [sales]);
-  useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { 
+    try {
+      const db = getDb();
+      db.data.sales = sales;
+      writeDb();
+    } catch (error) {
+      console.error('Failed to save sales:', error);
+    }
+  }, [sales]);
+  
+  useEffect(() => { 
+    try {
+      const db = getDb();
+      db.data.settings = settings;
+      writeDb();
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
+  }, [settings]);
 
   const addSale = useCallback((sale: Sale) => setSales(prev => [sale, ...prev]), []);
   const updateSale = useCallback((id: string, updates: Partial<Sale>) => {
