@@ -37,7 +37,6 @@ export default function FullTable() {
           'Model': s.model,
           'Branch': s.branch,
           'Unit Cost': s.cost,
-          'OR/CR': s.orCrStatus === 'na' ? 'N/A' : 'Released',
           'Date Release': formatDateBySettings(s.dateRelease, settings),
           'Client Name': s.clientName,
           'Contact': s.contact,
@@ -49,6 +48,7 @@ export default function FullTable() {
           'Accounting': docStatus(s.documents.accounting),
           'Dealer': docStatus(s.documents.dealer),
           'LTO': docStatus(s.documents.lto),
+          'OR/CR': s.orCrStatus === 'na' ? 'N/A' : 'Released',
           'AR': s.arStatus === 'paid' ? 'Paid' : 'Pending',
         };
       });
@@ -108,9 +108,9 @@ export default function FullTable() {
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="bg-muted text-muted-foreground">
-              {['CS#','Engine#','Chassis#','Brand','Model','Branch','Unit Cost','OR/CR','Date Release','Client Name','Contact','Address','Mode','Bank',
+              {['CS#','Engine#','Chassis#','Brand','Model','Branch','Unit Cost','Date Release','Client Name','Contact','Address','Mode','Bank',
                 ...Array.from({ length: settings.groupCount }, (_, i) => `Grp${i + 1}`),
-                'Gross','Accounting','Dealer','LTO','AR'
+                'Gross','Accounting','Dealer','LTO','OR/CR','AR'
               ].map(h => (
                 <th key={h} className="px-2 py-2 text-left font-semibold whitespace-nowrap border-b border-border">{h}</th>
               ))}
@@ -132,13 +132,6 @@ export default function FullTable() {
                   <td className="px-2 py-1.5">{s.model}</td>
                   <td className="px-2 py-1.5">{s.branch}</td>
                   <td className="px-2 py-1.5 text-right">₱{s.cost.toLocaleString()}</td>
-                  <td className="px-2 py-1.5">
-                    {s.orCrStatus === 'na' ? (
-                      <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>
-                    ) : (
-                      <span className="status-released px-1.5 py-0.5 rounded text-xs">Released</span>
-                    )}
-                  </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">{formatDateBySettings(s.dateRelease, settings)}</td>
                   <td className="px-2 py-1.5">{s.clientName}</td>
                   <td className="px-2 py-1.5">{s.contact}</td>
@@ -157,6 +150,13 @@ export default function FullTable() {
                   </td>
                   <td className="px-2 py-1.5">
                     <span className={statusColor(ltoStat)}>{ltoStat}</span>
+                  </td>
+                  <td className="px-2 py-1.5">
+                    {s.orCrStatus === 'na' ? (
+                      <span className="status-na-orcr px-1.5 py-0.5 rounded text-xs">N/A</span>
+                    ) : (
+                      <span className="status-released px-1.5 py-0.5 rounded text-xs">Released</span>
+                    )}
                   </td>
                   <td className="px-2 py-1.5">
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${s.arStatus === 'paid' ? 'status-released' : 'status-pending'}`}>

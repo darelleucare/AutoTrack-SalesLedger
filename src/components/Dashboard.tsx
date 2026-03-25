@@ -87,7 +87,7 @@ export default function Dashboard({ onSelectSale }: DashboardProps) {
                 <td className="px-3 py-2"><StatusBadge status={sale.ltoStatus} /></td>
                 <td className="px-3 py-2">
                   {sale.orCrStatus === 'na' ? (
-                    <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>
+                    <span className="status-na-orcr px-1.5 py-0.5 rounded text-xs">N/A</span>
                   ) : (
                     <span className="status-released px-1.5 py-0.5 rounded text-xs">Released</span>
                   )}

@@ -41,6 +41,8 @@
     --status-pending-text: 0 74% 35%;
     --status-na-bg: 220 14% 92%;
     --status-na-text: 220 9% 46%;
+    --status-na-orcr-bg: 33 100% 92%;
+    --status-na-orcr-text: 25 90% 40%;
 
     /* Pastel accents for cards */
     --pastel-blue: 204 94% 94%;
@@ -96,6 +98,8 @@
     --status-pending-text: 0 70% 70%;
     --status-na-bg: 220 10% 22%;
     --status-na-text: 220 10% 55%;
+    --status-na-orcr-bg: 25 60% 20%;
+    --status-na-orcr-text: 30 80% 65%;
 
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 96%;
@@ -152,6 +156,10 @@
   .status-na {
     background-color: hsl(var(--status-na-bg));
     color: hsl(var(--status-na-text));
+  }
+  .status-na-orcr {
+    background-color: hsl(var(--status-na-orcr-bg));
+    color: hsl(var(--status-na-orcr-text));
   }
   .pastel-card-blue {
     background-color: hsl(var(--pastel-blue));
