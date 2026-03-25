@@ -58,9 +58,10 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
     return result;
   }, [sales, search, sortKey, sortDir]);
 
-  const statusClass = (status: string, type: 'default' | 'ar' = 'default') => {
-    const isGood = type === 'ar' ? status === 'paid' : status === 'released';
-    return isGood ? 'status-released' : 'status-pending';
+  const statusClass = (status: string, type: 'default' | 'ar' | 'orCr' = 'default') => {
+    if (type === 'ar') return status === 'paid' ? 'status-released' : 'status-pending';
+    if (type === 'orCr') return status === 'released' ? 'status-released' : 'status-na';
+    return status === 'released' ? 'status-released' : 'status-pending';
   };
 
   const sortableHeaders = [
@@ -106,6 +107,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
               <th className="px-3 py-2 font-medium" colSpan={2}>Accounting</th>
               <th className="px-3 py-2 font-medium" colSpan={2}>Dealer</th>
               <th className="px-3 py-2 font-medium" colSpan={2}>LTO</th>
+              <th className="px-3 py-2 font-medium">OR/CR</th>
               <th className="px-3 py-2 font-medium">AR</th>
             </tr>
             <tr className="bg-muted/50 text-left text-xs">
@@ -121,11 +123,12 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
               <th className="px-3 py-1">Status</th>
               <th className="px-3 py-1">Missing/Complete</th>
               <th className="px-3 py-1">Status</th>
+              <th className="px-3 py-1">Status</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={12} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
+              <tr><td colSpan={13} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
             {filtered.map(sale => {
               const cashCopo = isCashOrCopo(sale.modeOfPayment);
@@ -286,6 +289,18 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
                     </Tooltip>
                   </td>
                   {/* AR */}
+                  <td className="px-3 py-2">
+                    <select
+                      className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.orCrStatus, 'orCr')}`}
+                      value={sale.orCrStatus}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => { e.stopPropagation(); updateSale(sale.id, { orCrStatus: e.target.value as any }); }}
+                    >
+                      <option value="na">na</option>
+                      <option value="released">released</option>
+                    </select>
+                  </td>
+                  {/* AR Status */}
                   <td className="px-3 py-2">
                     <select
                       className={`text-xs border border-border rounded px-1 py-0.5 ${statusClass(sale.arStatus, 'ar')}`}

@@ -22,7 +22,6 @@ const fields: { key: keyof Sale; label: string }[] = [
   { key: 'model', label: 'Model' },
   { key: 'rate', label: 'Rate (%)' },
   { key: 'cost', label: 'Cost' },
-  { key: 'orCr', label: 'OR/CR' },
   { key: 'dateRelease', label: 'Date Release' },
 ];
 

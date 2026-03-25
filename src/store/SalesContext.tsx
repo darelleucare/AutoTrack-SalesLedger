@@ -17,7 +17,13 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [sales, setSales] = useState<Sale[]>(() => {
     try {
       const db = getDb();
-      return db.data.sales || [];
+      const loadedSales = db.data.sales || [];
+      // Migrate old data: set orCrStatus to 'released' if it doesn't exist
+      return loadedSales.map(s => ({
+        ...s,
+        orCr: (s.orCr as any) || 'released' as any,
+        orCrStatus: (s.orCrStatus as any) || 'released' as any,
+      }));
     } catch {
       return [];
     }

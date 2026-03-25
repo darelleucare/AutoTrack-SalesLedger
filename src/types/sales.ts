@@ -1,5 +1,6 @@
 export type StatusType = 'pending' | 'released';
 export type ARStatusType = 'pending' | 'paid';
+export type ORCRStatusType = 'na' | 'released';
 export type PaymentMode = 'cash' | 'fin' | 'copo' | 'bank_po';
 
 export interface DocumentChecklist {
@@ -19,7 +20,7 @@ export interface Sale {
   model: string;
   rate: number;
   cost: number;
-  orCr: string;
+  orCr: ORCRStatusType;
   dateRelease: string;
   branch: string;
   bank: string;
@@ -31,6 +32,7 @@ export interface Sale {
   accountingStatus: StatusType;
   dealerStatus: StatusType;
   ltoStatus: StatusType;
+  orCrStatus: ORCRStatusType;
   arStatus: ARStatusType;
   modeOfPayment: PaymentMode;
   groupNumber: number;

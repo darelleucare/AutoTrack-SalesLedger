@@ -37,7 +37,7 @@ export default function FullTable() {
           'Model': s.model,
           'Branch': s.branch,
           'Unit Cost': s.cost,
-          'OR/CR': s.orCr,
+          'OR/CR': s.orCrStatus === 'na' ? 'N/A' : 'Released',
           'Date Release': formatDateBySettings(s.dateRelease, settings),
           'Client Name': s.clientName,
           'Contact': s.contact,
@@ -132,7 +132,13 @@ export default function FullTable() {
                   <td className="px-2 py-1.5">{s.model}</td>
                   <td className="px-2 py-1.5">{s.branch}</td>
                   <td className="px-2 py-1.5 text-right">₱{s.cost.toLocaleString()}</td>
-                  <td className="px-2 py-1.5">{s.orCr}</td>
+                  <td className="px-2 py-1.5">
+                    {s.orCrStatus === 'na' ? (
+                      <span className="status-na px-1.5 py-0.5 rounded text-xs">N/A</span>
+                    ) : (
+                      <span className="status-released px-1.5 py-0.5 rounded text-xs">Released</span>
+                    )}
+                  </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">{formatDateBySettings(s.dateRelease, settings)}</td>
                   <td className="px-2 py-1.5">{s.clientName}</td>
                   <td className="px-2 py-1.5">{s.contact}</td>

@@ -154,7 +154,20 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
               </span>
             </div>
             <EditableField label="Rate (%)" field="rate" value={`${localSale.rate}%`} />
-            <EditableField label="OR/CR" field="orCr" value={localSale.orCr} />
+            <div className="flex justify-between items-center py-1">
+              <span className="text-xs text-muted-foreground">OR/CR</span>
+              <select
+                value={localSale.orCrStatus}
+                onChange={(e) => {
+                  const value = e.target.value as any;
+                  setLocalSale(prev => ({ ...prev, orCr: value, orCrStatus: value }));
+                }}
+                className="text-sm border border-border rounded px-2 py-0.5 bg-background w-40"
+              >
+                <option value="na">N/A</option>
+                <option value="released">Released</option>
+              </select>
+            </div>
             <EditableField label="Branch" field="branch" value={localSale.branch} />
             <div className="flex justify-between items-center py-1">
               <span className="text-xs text-muted-foreground">Date Release</span>

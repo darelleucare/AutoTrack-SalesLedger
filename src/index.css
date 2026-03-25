@@ -119,7 +119,7 @@
     left: 0;
     width: 100%;
     height: 100% ;
-    background-image: url('/../public/bg-img-logo.png');
+    background-image: url('/bg-img-logo.png');
     background-size: 35%;
     background-attachment: fixed;
     background-position: center;
