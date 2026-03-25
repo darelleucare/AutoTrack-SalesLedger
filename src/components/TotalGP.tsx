@@ -7,7 +7,7 @@ import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 type SortDir = 'asc' | 'desc';
 
 export default function TotalGP() {
-  const { sales } = useSales();
+  const { sales, settings } = useSales();
   const [bdSearch, setBdSearch] = useState('');
   const [bdSortKey, setBdSortKey] = useState<string>('cs');
   const [bdSortDir, setBdSortDir] = useState<SortDir>('asc');

@@ -26,7 +26,9 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const db = getDb();
-      return db.data.settings || DEFAULT_SETTINGS;
+      const savedSettings = db.data.settings || {};
+      // Merge with DEFAULT_SETTINGS to ensure new fields are included
+      return { ...DEFAULT_SETTINGS, ...savedSettings };
     } catch {
       return DEFAULT_SETTINGS;
     }

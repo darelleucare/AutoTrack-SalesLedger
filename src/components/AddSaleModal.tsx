@@ -21,6 +21,9 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
   const [docPage, setDocPage] = useState(0);
   const [dateRelease, setDateRelease] = useState<Date>(new Date());
 
+  // Ensure groupNames exists (for backward compatibility with old data)
+  const groupNames = settings.groupNames || Array.from({ length: settings.groupCount }, (_, i) => `Group ${i + 1}`);
+
   const [form, setForm] = useState({
     cs: '', engineNo: '', chassisNo: '', color: '', brand: '', model: '',
     cost: '', branch: 'Carmona', bank: '', clientName: '', contact: '', address: '',
@@ -285,14 +288,14 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
                     onChange={e => updateField('groupNumber', e.target.value)}
                   >
                     {Array.from({ length: settings.groupCount }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>{`Group ${i + 1}`}</option>
+                      <option key={i + 1} value={i + 1}>{groupNames[i] || `Group ${i + 1}`}</option>
                     ))}
                   </select>
                 </div>
 
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 mt-4">Group Profit</h4>
                 <div className="mb-2">
-                  <label className="text-xs text-muted-foreground">GP Amount (Group {form.groupNumber})</label>
+                  <label className="text-xs text-muted-foreground">GP Amount ({groupNames[Number(form.groupNumber) - 1] || `Group ${form.groupNumber}`})</label>
                   <input
                     type="number"
                     className="w-full border border-border rounded px-2 py-1.5 text-sm bg-background"

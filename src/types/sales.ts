@@ -42,6 +42,7 @@ export interface AppSettings {
   dateFormat: 'us' | 'eur' | 'jpn';
   dateLength: 'short' | 'long';
   groupCount: number;
+  groupNames: string[];
   vehicleModels: string[];
   accountingDocs: string[];
   dealerDocs: string[];
@@ -163,6 +164,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: 'us',
   dateLength: 'short',
   groupCount: 3,
+  groupNames: ['Group 1', 'Group 2', 'Group 3'],
   vehicleModels: ['Vios', 'Hilux', 'Fortuner', 'Innova', 'Wigo', 'Raize', 'Rush', 'Avanza'],
   accountingDocs: [...ACCOUNTING_DOCS],
   dealerDocs: [...DEALER_DOCS],

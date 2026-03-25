@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSales } from '@/store/SalesContext';
 import { DEFAULT_BANK_CHECKLIST } from '@/types/sales';
-import { ArrowLeft, Plus, Trash2, Edit2, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChecklistEditor from '@/components/settings/ChecklistEditor';
 
@@ -10,6 +10,11 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const [newModel, setNewModel] = useState('');
   const [activeChecklistTab, setActiveChecklistTab] = useState<'accounting' | 'dealer' | 'lto'>('accounting');
+  const [editingGroupIndex, setEditingGroupIndex] = useState<number | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
+
+  // Ensure groupNames exists (for backward compatibility with old data)
+  const groupNames = settings.groupNames || Array.from({ length: settings.groupCount }, (_, i) => `Group ${i + 1}`);
 
   // Bank config state
   const [addingBank, setAddingBank] = useState(false);
@@ -26,6 +31,35 @@ export default function SettingsPage() {
 
   const removeModel = (m: string) => {
     updateSettings({ vehicleModels: settings.vehicleModels.filter(v => v !== m) });
+  };
+
+  const startRenameGroup = (index: number) => {
+    setEditingGroupIndex(index);
+    setEditingGroupName(groupNames[index] || `Group ${index + 1}`);
+  };
+
+  const saveGroupName = (index: number) => {
+    if (editingGroupName.trim()) {
+      const newNames = [...groupNames];
+      newNames[index] = editingGroupName.trim();
+      updateSettings({ groupNames: newNames });
+    }
+    setEditingGroupIndex(null);
+  };
+
+  const updateGroupCount = (newCount: number) => {
+    const count = Math.max(1, newCount || 3);
+    const currentNames = [...groupNames];
+    
+    // Expand or trim names array to match count
+    while (currentNames.length < count) {
+      currentNames.push(`Group ${currentNames.length + 1}`);
+    }
+    if (currentNames.length > count) {
+      currentNames.length = count;
+    }
+    
+    updateSettings({ groupCount: count, groupNames: currentNames });
   };
 
   const toggleTheme = (theme: 'light' | 'dark') => {
@@ -126,17 +160,67 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Group Count */}
+      {/* Group Configuration */}
       <div className="border border-border rounded p-4 mb-4 bg-card">
-        <h3 className="text-sm font-semibold mb-3">Group Count</h3>
-        <input
-          type="number"
-          min={1}
-          max={10}
-          className="border border-border rounded px-3 py-1.5 text-sm bg-background w-20"
-          value={settings.groupCount}
-          onChange={e => updateSettings({ groupCount: Math.max(1, Number(e.target.value) || 3) })}
-        />
+        <h3 className="text-sm font-semibold mb-3">Group Configuration</h3>
+        
+        {/* Group Count Input */}
+        <div className="mb-4">
+          <label className="text-xs text-muted-foreground mb-2 block">Number of Groups</label>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            className="border border-border rounded px-3 py-1.5 text-sm bg-background w-20"
+            value={settings.groupCount}
+            onChange={e => updateGroupCount(Number(e.target.value))}
+          />
+        </div>
+
+        {/* Group Names */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-2 block font-medium">Group Names</label>
+          <div className="space-y-2">
+            {groupNames.map((name, idx) => (
+              <div key={idx} className="flex items-center gap-2 p-2 rounded border border-border bg-muted/50">
+                {editingGroupIndex === idx ? (
+                  <>
+                    <input
+                      autoFocus
+                      type="text"
+                      className="flex-1 border border-border rounded px-2 py-1 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                      value={editingGroupName}
+                      onChange={e => setEditingGroupName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && saveGroupName(idx)}
+                    />
+                    <button
+                      onClick={() => saveGroupName(idx)}
+                      className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:opacity-90"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingGroupIndex(null)}
+                      className="p-1 hover:bg-accent rounded"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1 text-sm font-medium">{name}</span>
+                    <button
+                      onClick={() => startRenameGroup(idx)}
+                      className="p-1 hover:bg-accent rounded"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Vehicle Models */}

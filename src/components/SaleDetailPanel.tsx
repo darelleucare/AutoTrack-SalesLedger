@@ -18,6 +18,9 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
   const [docTab, setDocTab] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState(sale.groupNumber);
 
+  // Ensure groupNames exists (for backward compatibility with old data)
+  const groupNames = settings.groupNames || Array.from({ length: settings.groupCount }, (_, i) => `Group ${i + 1}`);
+
   // Ensure grp array has correct length based on settings
   const normalizedGrp = [...sale.grp];
   while (normalizedGrp.length < settings.groupCount) {
@@ -200,15 +203,15 @@ export default function SaleDetailPanel({ sale, onClose }: SaleDetailPanelProps)
                     setSelectedGroup(newGroupNumber);
                     setLocalSale(prev => ({ ...prev, groupNumber: newGroupNumber }));
                   }}
-                  className="text-sm border border-border rounded px-2 py-0.5 bg-background w-32"
+                  className="text-sm border border-border rounded px-2 py-0.5 bg-background w-40"
                 >
                   {Array.from({ length: settings.groupCount }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>{`Group ${i + 1}`}</option>
+                    <option key={i + 1} value={i + 1}>{groupNames[i] || `Group ${i + 1}`}</option>
                   ))}
                 </select>
               </div>
               <EditableField 
-                label={`GP Amount (Group ${selectedGroup})`} 
+                label={`GP Amount (${groupNames[selectedGroup - 1] || `Group ${selectedGroup}`})`} 
                 field={`grp_${selectedGroup - 1}`} 
                 value={`₱${(localSale.grp[selectedGroup - 1] || 0).toLocaleString()}`} 
               />
