@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
 import {
   Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType,
-  DocumentChecklist, isCashOrCopo, CASH_COPO_EXCLUDED_DEALER_DOCS, CASH_COPO_EXCLUDED_ACCOUNTING_DOCS,
+  DocumentChecklist, isCashOrCopo,
   DEFAULT_BANK_CHECKLIST, formatDateBySettings,
 } from '@/types/sales';
 import { X, CalendarIcon } from 'lucide-react';
