@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Sale, AppSettings, DEFAULT_SETTINGS } from '@/types/sales';
+import { Sale, AppSettings, DEFAULT_SETTINGS, DEFAULT_ACCOUNTING_BANK_REQUIRED, DEFAULT_DEALER_BANK_REQUIRED } from '@/types/sales';
 import { getDb, writeDb } from '@/lib/db';
 
 interface SalesContextType {
