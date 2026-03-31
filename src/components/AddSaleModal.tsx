@@ -25,7 +25,7 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
   const groupNames = settings.groupNames || Array.from({ length: settings.groupCount }, (_, i) => `Group ${i + 1}`);
 
   const [form, setForm] = useState({
-    cs: '', engineNo: '', chassisNo: '', color: '', brand: '', model: '',
+    cs: '', engineNo: '', chassisNo: '', color: '', brand: 'SUZUKI', model: '',
     cost: '', branch: 'Carmona', bank: '', clientName: '', contact: '', address: '',
     rate: '', orCr: 'na', modeOfPayment: 'cash' as PaymentMode, groupNumber: '1',
   });
