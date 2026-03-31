@@ -21,9 +21,15 @@ import { CSS } from '@dnd-kit/utilities';
 interface ChecklistEditorProps {
   items: string[];
   onChange: (items: string[]) => void;
+  bankRequiredItems?: string[];
+  onBankRequiredChange?: (items: string[]) => void;
+  showBankRequired?: boolean;
 }
 
-function SortableItem({ id, index, item, onRemove }: { id: string; index: number; item: string; onRemove: () => void }) {
+function SortableItem({ id, index, item, onRemove, isBankRequired, onToggleBankRequired, showBankRequired }: {
+  id: string; index: number; item: string; onRemove: () => void;
+  isBankRequired?: boolean; onToggleBankRequired?: () => void; showBankRequired?: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -48,6 +54,17 @@ function SortableItem({ id, index, item, onRemove }: { id: string; index: number
       </button>
       <span className="text-xs text-muted-foreground w-5 shrink-0">{index + 1}.</span>
       <span className="flex-1 truncate">{item}</span>
+      {showBankRequired && (
+        <label className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0 cursor-pointer" title="Required by Bank">
+          <input
+            type="checkbox"
+            checked={isBankRequired || false}
+            onChange={onToggleBankRequired}
+            className="w-3 h-3 accent-primary rounded"
+          />
+          <span className={isBankRequired ? 'text-primary font-medium' : ''}>Bank</span>
+        </label>
+      )}
       <button
         onClick={onRemove}
         className="p-0.5 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
@@ -58,8 +75,9 @@ function SortableItem({ id, index, item, onRemove }: { id: string; index: number
   );
 }
 
-export default function ChecklistEditor({ items, onChange }: ChecklistEditorProps) {
+export default function ChecklistEditor({ items, onChange, bankRequiredItems, onBankRequiredChange, showBankRequired }: ChecklistEditorProps) {
   const [newItem, setNewItem] = useState('');
+  const [newItemBankRequired, setNewItemBankRequired] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -77,11 +95,24 @@ export default function ChecklistEditor({ items, onChange }: ChecklistEditorProp
     }
   };
 
+  const toggleBankRequired = (item: string) => {
+    if (!onBankRequiredChange || !bankRequiredItems) return;
+    if (bankRequiredItems.includes(item)) {
+      onBankRequiredChange(bankRequiredItems.filter(i => i !== item));
+    } else {
+      onBankRequiredChange([...bankRequiredItems, item]);
+    }
+  };
+
   const addItem = () => {
     const trimmed = newItem.trim();
     if (trimmed && !items.includes(trimmed)) {
       onChange([...items, trimmed]);
+      if (showBankRequired && newItemBankRequired && onBankRequiredChange && bankRequiredItems) {
+        onBankRequiredChange([...bankRequiredItems, trimmed]);
+      }
       setNewItem('');
+      setNewItemBankRequired(false);
     }
   };
 
@@ -99,7 +130,15 @@ export default function ChecklistEditor({ items, onChange }: ChecklistEditorProp
                 id={ids[i]}
                 index={i}
                 item={item}
-                onRemove={() => onChange(items.filter((_, idx) => idx !== i))}
+                onRemove={() => {
+                  onChange(items.filter((_, idx) => idx !== i));
+                  if (showBankRequired && onBankRequiredChange && bankRequiredItems) {
+                    onBankRequiredChange(bankRequiredItems.filter(r => r !== item));
+                  }
+                }}
+                showBankRequired={showBankRequired}
+                isBankRequired={bankRequiredItems?.includes(item)}
+                onToggleBankRequired={() => toggleBankRequired(item)}
               />
             ))}
           </SortableContext>
@@ -113,6 +152,17 @@ export default function ChecklistEditor({ items, onChange }: ChecklistEditorProp
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addItem()}
         />
+        {showBankRequired && (
+          <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer shrink-0 px-1" title="Mark as required by bank">
+            <input
+              type="checkbox"
+              checked={newItemBankRequired}
+              onChange={e => setNewItemBankRequired(e.target.checked)}
+              className="w-3.5 h-3.5 accent-primary rounded"
+            />
+            <span>Required by Bank</span>
+          </label>
+        )}
         <button
           onClick={addItem}
           disabled={!newItem.trim()}

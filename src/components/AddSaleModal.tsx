@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSales } from '@/store/SalesContext';
 import {
   Sale, createEmptyDocuments, defaultGrp, PaymentMode, ARStatusType,
-  DocumentChecklist, isCashOrCopo, CASH_COPO_EXCLUDED_DEALER_DOCS, CASH_COPO_EXCLUDED_ACCOUNTING_DOCS,
+  DocumentChecklist, isCashOrCopo,
   DEFAULT_BANK_CHECKLIST, formatDateBySettings,
 } from '@/types/sales';
 import { X, CalendarIcon } from 'lucide-react';
@@ -58,11 +58,11 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       pages.push({ title: 'Bank', key: 'bank', docs: bankDocs });
     }
     const accountingDocs = cashCopo
-      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      ? settings.accountingDocs.filter(d => !settings.accountingBankRequired.includes(d))
       : settings.accountingDocs;
     pages.push({ title: 'Accounting', key: 'accounting', docs: accountingDocs });
     const dealerDocs = cashCopo
-      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      ? settings.dealerDocs.filter(d => !settings.dealerBankRequired.includes(d))
       : settings.dealerDocs;
     pages.push({ title: 'Dealer', key: 'dealer', docs: dealerDocs });
     pages.push({ title: 'LTO', key: 'lto', docs: settings.ltoDocs });
@@ -73,10 +73,10 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
     if (!isValid) return;
     const bankDocs = cashCopo ? [] : (settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST);
     const accountingDocs = cashCopo
-      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      ? settings.accountingDocs.filter(d => !settings.accountingBankRequired.includes(d))
       : settings.accountingDocs;
     const dealerDocs = cashCopo
-      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      ? settings.dealerDocs.filter(d => !settings.dealerBankRequired.includes(d))
       : settings.dealerDocs;
     setDocs(createEmptyDocuments(bankDocs, accountingDocs, dealerDocs, settings.ltoDocs));
     setDocPage(0);

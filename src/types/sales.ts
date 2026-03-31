@@ -50,6 +50,8 @@ export interface AppSettings {
   dealerDocs: string[];
   ltoDocs: string[];
   bankChecklists: Record<string, string[]>;
+  accountingBankRequired: string[];
+  dealerBankRequired: string[];
 }
 
 // Legacy constants (kept for reference / backward compat)
@@ -95,8 +97,8 @@ export const DEFAULT_BANK_CHECKLIST = [
   'Promissory Note with Chattel Mortgage',
 ];
 
-export const CASH_COPO_EXCLUDED_DEALER_DOCS = ['Credit Advise Report'];
-export const CASH_COPO_EXCLUDED_ACCOUNTING_DOCS = ['Credit Application', 'Transmittal (Received by Bank)', 'Tracker (Transmitted)'];
+export const DEFAULT_ACCOUNTING_BANK_REQUIRED = ['Credit Application', 'Transmittal (Received by Bank)', 'Tracker (Transmitted)'];
+export const DEFAULT_DEALER_BANK_REQUIRED = ['Credit Advise Report'];
 
 export function isCashOrCopo(mode: PaymentMode): boolean {
   return mode === 'cash' || mode === 'copo';
@@ -172,6 +174,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dealerDocs: [...DEALER_DOCS],
   ltoDocs: [...LTO_DOCS],
   bankChecklists: { ...DEFAULT_BANK_CHECKLISTS },
+  accountingBankRequired: [...DEFAULT_ACCOUNTING_BANK_REQUIRED],
+  dealerBankRequired: [...DEFAULT_DEALER_BANK_REQUIRED],
 };
 
 export function defaultGrp(count: number): number[] {
