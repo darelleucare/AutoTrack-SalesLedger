@@ -2,6 +2,8 @@ import { useSales } from '@/store/SalesContext';
 import SummaryCard from './SummaryCard';
 import { StatusBadge } from './StatusBadge';
 import { Sale, isCashOrCopo } from '@/types/sales';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface DashboardProps {
   onSelectSale: (sale: Sale) => void;
