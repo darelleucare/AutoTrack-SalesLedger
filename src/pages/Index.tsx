@@ -59,9 +59,9 @@ export default function Index() {
       {/* Main content */}
       <main className="p-4 space-y-8 max-w-[1600px] mx-auto">
         <Dashboard onSelectSale={setSelectedSale} />
+        <ActivityTracking onSelectSale={setSelectedSale} />
         <UnitInformation onSelectSale={setSelectedSale} />
         <ClientInformation onSelectSale={setSelectedSale} />
-        <ActivityTracking onSelectSale={setSelectedSale} />
         <TotalGP />
       </main>
 
