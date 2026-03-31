@@ -110,7 +110,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
             {grouped.length === 0 && (
               <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {grouped.map(([client, clientSales]) =>
+            {pagedGroups.map(([client, clientSales]) =>
               clientSales.map((sale, idx) => {
                 const cashCopo = isCashOrCopo(sale.modeOfPayment);
                 const [clientName] = client.split('|');
