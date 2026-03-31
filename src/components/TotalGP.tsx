@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import SummaryCard from './SummaryCard';
 import { Sale } from '@/types/sales';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 type SortDir = 'asc' | 'desc';
 
@@ -49,6 +51,8 @@ export default function TotalGP() {
     });
     return rows;
   }, [sales, bdSearch, bdSortKey, bdSortDir]);
+
+  const { paged: pagedBreakdowns, page: bdPage, setPage: setBdPage, totalPages: bdTotalPages, totalItems: bdTotalItems, pageSize: bdPageSize } = usePagination(breakdowns);
 
   const modeLabel: Record<string, string> = { cash: 'Cash', fin: 'FIN', copo: 'COPO', bank_po: 'BANK PO' };
   const bdHeaders = [
@@ -147,7 +151,7 @@ export default function TotalGP() {
               {breakdowns.length === 0 && (
                 <tr><td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
               )}
-              {breakdowns.map((r, i) => (
+              {pagedBreakdowns.map((r, i) => (
                 <tr key={i} className="border-t border-border">
                   <td className="px-3 py-2 font-medium">{r.cs}</td>
                   <td className="px-3 py-2">Group {r.groupNumber}</td>
@@ -157,6 +161,7 @@ export default function TotalGP() {
               ))}
             </tbody>
           </table>
+          <TablePagination currentPage={bdPage} totalPages={bdTotalPages} onPageChange={setBdPage} totalItems={bdTotalItems} pageSize={bdPageSize} />
         </div>
       </div>
     </section>

@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import { Sale, isCashOrCopo } from '@/types/sales';
 import { StatusBadge } from './StatusBadge';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface ClientInformationProps {
   onSelectSale: (sale: Sale) => void;
@@ -48,6 +50,8 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
     });
     return entries;
   }, [filteredSales, sortKey, sortDir]);
+
+  const { paged: pagedGroups, page, setPage, totalPages, totalItems, pageSize } = usePagination(grouped);
 
   const statusClass = (status: string, type: 'default' | 'ar' | 'orCr' = 'default') => {
     if (type === 'ar') return status === 'paid' ? 'status-released' : 'status-pending';
@@ -108,7 +112,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
             {grouped.length === 0 && (
               <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {grouped.map(([client, clientSales]) =>
+            {pagedGroups.map(([client, clientSales]) =>
               clientSales.map((sale, idx) => {
                 const cashCopo = isCashOrCopo(sale.modeOfPayment);
                 const [clientName] = client.split('|');
@@ -205,6 +209,7 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
             )}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );

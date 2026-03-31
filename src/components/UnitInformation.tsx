@@ -5,6 +5,8 @@ import { Search, ArrowUp, ArrowDown, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface UnitInformationProps {
   onSelectSale: (sale: Sale) => void;
@@ -55,6 +57,8 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
     });
     return result;
   }, [sales, search, sortKey, sortDir]);
+
+  const { paged, page, setPage, totalPages, totalItems, pageSize } = usePagination(filtered);
 
   const startEdit = (id: string, field: string, value: string) => {
     if (field === 'dateRelease') {
@@ -112,7 +116,7 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
             {filtered.length === 0 && (
               <tr><td colSpan={fields.length} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {filtered.map(sale => (
+            {paged.map(sale => (
               <tr key={sale.id} className="border-t border-border hover:bg-accent/50 transition-colors">
                 {fields.map(f => {
                   const isEditing = editingCell?.id === sale.id && editingCell?.field === f.key;
@@ -176,6 +180,7 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
             ))}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );

@@ -2,6 +2,8 @@ import { useSales } from '@/store/SalesContext';
 import SummaryCard from './SummaryCard';
 import { StatusBadge } from './StatusBadge';
 import { Sale, isCashOrCopo } from '@/types/sales';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface DashboardProps {
   onSelectSale: (sale: Sale) => void;
@@ -25,7 +27,7 @@ export default function Dashboard({ onSelectSale }: DashboardProps) {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
-  const recent = sales.slice(0, 20);
+  const { paged: recent, page, setPage, totalPages, totalItems, pageSize } = usePagination(sales);
 
   return (
     <section id="dashboard" className="space-y-4">
@@ -97,6 +99,7 @@ export default function Dashboard({ onSelectSale }: DashboardProps) {
             ))}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );

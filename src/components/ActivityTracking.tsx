@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import { Sale, StatusType, ARStatusType, isCashOrCopo } from '@/types/sales';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface ActivityTrackingProps {
   onSelectSale: (sale: Sale) => void;
@@ -57,6 +59,8 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
     });
     return result;
   }, [sales, search, sortKey, sortDir]);
+
+  const { paged, page, setPage, totalPages, totalItems, pageSize } = usePagination(filtered);
 
   const statusClass = (status: string, type: 'default' | 'ar' | 'orCr' = 'default') => {
     if (type === 'ar') return status === 'paid' ? 'status-released' : 'status-pending';
@@ -130,7 +134,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
             {filtered.length === 0 && (
               <tr><td colSpan={13} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {filtered.map(sale => {
+            {paged.map(sale => {
               const cashCopo = isCashOrCopo(sale.modeOfPayment);
               const bankMissing = getMissing(sale.documents.bank);
               const accMissing = getMissing(sale.documents.accounting);
@@ -316,6 +320,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
             })}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );
