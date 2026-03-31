@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import { Sale, isCashOrCopo } from '@/types/sales';
 import { StatusBadge } from './StatusBadge';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface ClientInformationProps {
   onSelectSale: (sale: Sale) => void;
