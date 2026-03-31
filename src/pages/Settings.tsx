@@ -278,6 +278,18 @@ export default function SettingsPage() {
             else if (activeChecklistTab === 'dealer') updateSettings({ dealerDocs: items });
             else updateSettings({ ltoDocs: items });
           }}
+          showBankRequired={activeChecklistTab === 'accounting' || activeChecklistTab === 'dealer'}
+          bankRequiredItems={
+            activeChecklistTab === 'accounting'
+              ? settings.accountingBankRequired
+              : activeChecklistTab === 'dealer'
+              ? settings.dealerBankRequired
+              : undefined
+          }
+          onBankRequiredChange={(items) => {
+            if (activeChecklistTab === 'accounting') updateSettings({ accountingBankRequired: items });
+            else if (activeChecklistTab === 'dealer') updateSettings({ dealerBankRequired: items });
+          }}
         />
       </div>
 
