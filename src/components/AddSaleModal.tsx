@@ -73,10 +73,10 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
     if (!isValid) return;
     const bankDocs = cashCopo ? [] : (settings.bankChecklists[form.bank] || DEFAULT_BANK_CHECKLIST);
     const accountingDocs = cashCopo
-      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      ? settings.accountingDocs.filter(d => !settings.accountingBankRequired.includes(d))
       : settings.accountingDocs;
     const dealerDocs = cashCopo
-      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      ? settings.dealerDocs.filter(d => !settings.dealerBankRequired.includes(d))
       : settings.dealerDocs;
     setDocs(createEmptyDocuments(bankDocs, accountingDocs, dealerDocs, settings.ltoDocs));
     setDocPage(0);
