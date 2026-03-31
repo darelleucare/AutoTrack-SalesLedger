@@ -58,11 +58,11 @@ export default function AddSaleModal({ onClose }: AddSaleModalProps) {
       pages.push({ title: 'Bank', key: 'bank', docs: bankDocs });
     }
     const accountingDocs = cashCopo
-      ? settings.accountingDocs.filter(d => !CASH_COPO_EXCLUDED_ACCOUNTING_DOCS.includes(d))
+      ? settings.accountingDocs.filter(d => !settings.accountingBankRequired.includes(d))
       : settings.accountingDocs;
     pages.push({ title: 'Accounting', key: 'accounting', docs: accountingDocs });
     const dealerDocs = cashCopo
-      ? settings.dealerDocs.filter(d => !CASH_COPO_EXCLUDED_DEALER_DOCS.includes(d))
+      ? settings.dealerDocs.filter(d => !settings.dealerBankRequired.includes(d))
       : settings.dealerDocs;
     pages.push({ title: 'Dealer', key: 'dealer', docs: dealerDocs });
     pages.push({ title: 'LTO', key: 'lto', docs: settings.ltoDocs });
