@@ -58,6 +58,8 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
     return result;
   }, [sales, search, sortKey, sortDir]);
 
+  const { paged, page, setPage, totalPages, totalItems, pageSize } = usePagination(filtered);
+
   const startEdit = (id: string, field: string, value: string) => {
     if (field === 'dateRelease') {
       setDatePickerOpen(id);
