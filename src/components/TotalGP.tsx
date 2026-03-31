@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import SummaryCard from './SummaryCard';
 import { Sale } from '@/types/sales';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 type SortDir = 'asc' | 'desc';
 
