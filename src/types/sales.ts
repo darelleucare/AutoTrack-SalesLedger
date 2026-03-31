@@ -164,12 +164,21 @@ export const DEFAULT_BANK_CHECKLISTS: Record<string, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'light',
+  theme: 'dark',
   dateFormat: 'us',
   dateLength: 'short',
   groupCount: 3,
   groupNames: ['Group 1', 'Group 2', 'Group 3'],
-  vehicleModels: ['Vios', 'Hilux', 'Fortuner', 'Innova', 'Wigo', 'Raize', 'Rush', 'Avanza'],
+  vehicleModels: ['AVP 1.6 GA MT' , 'AVP 1.6 GLX MT' , 'CARRY CAB & CHASSIS' , 'CARRY CARGO VAN' , 'CARRY DROPSIDE' ,
+                  'CARRY LINEMAN\'S VEHICLE BODY' , 'CARRY UTILITY VAN' , 'CELERIO GL AGS' , 'DZIRE GA MT' , 'DZIRE GL MT' , 
+                  'DZIRE GLP AGS' , 'DZIRE GL CVT - HYBRID, DZIRE GLX CVT - HYBRID' , 'ERTIGA 1.5 GA MT - HYBRID' , 
+                  ' ERTIGA 1.5 GA AT - HYBRID' , 'ERTIGA 1.5 GL MT - HYBRID' , 'ERTIGA 1.5 GLX AT - HYBRID' , 'FRONX GL AT' , 
+                  'FRONX GLX AT - HYBRID' , 'FRONX GLX AT - HYBRID (TWO-TONE)' , 'FRONX SGX AT - HYBRID (TWO-TONE)' , 'JIMNY 1.5 GL MT' , 
+                  'JIMNY 1.5 GLX AT' , 'JIMNY 1.5 GLX AT MONOTONE SS' , 'JIMNY 1.5 GLX AT TWO-TONE SS' , 'JIMNY 1.5 5DR GL MT' , 
+                  'JIMNY 1.5 5DR GLX AT' , 'JIMNY 1.5 5DR GLX AT MONOTONE' , 'JIMNY 1.5 5DR GLX AT TWO-TONE' , 'JIMNY 3GLX AT R' , 
+                  'JIMNY 5DR GLX AT R - MONOTONE' , 'JIMNY 5DR GLX AT R - TWO-TONE' , 'S-PRESSO 1.0 GL AGS' , 'S-PRESSO 1.0 GL MT' , 
+                  'SWIFT 1.2 GL CVT' , 'XL7 1.5 GLX AT - HYBRID MONOTONE' , 'XL7 1.5 GLX AT - HYBRID TWO-TONE' , 
+                  'XL7 1.5 GLX AT - HYBRID BLACK EDITION' , 'XL7 1.5 GLX AT - HYBRID (TWO-TONE) BLACK EDITION'],
   accountingDocs: [...ACCOUNTING_DOCS],
   dealerDocs: [...DEALER_DOCS],
   ltoDocs: [...LTO_DOCS],
