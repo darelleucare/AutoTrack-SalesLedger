@@ -52,6 +52,8 @@ export default function TotalGP() {
     return rows;
   }, [sales, bdSearch, bdSortKey, bdSortDir]);
 
+  const { paged: pagedBreakdowns, page: bdPage, setPage: setBdPage, totalPages: bdTotalPages, totalItems: bdTotalItems, pageSize: bdPageSize } = usePagination(breakdowns);
+
   const modeLabel: Record<string, string> = { cash: 'Cash', fin: 'FIN', copo: 'COPO', bank_po: 'BANK PO' };
   const bdHeaders = [
     { key: 'cs', label: 'CS#' },

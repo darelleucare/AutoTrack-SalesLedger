@@ -51,6 +51,8 @@ export default function ClientInformation({ onSelectSale }: ClientInformationPro
     return entries;
   }, [filteredSales, sortKey, sortDir]);
 
+  const { paged: pagedGroups, page, setPage, totalPages, totalItems, pageSize } = usePagination(grouped);
+
   const statusClass = (status: string, type: 'default' | 'ar' | 'orCr' = 'default') => {
     if (type === 'ar') return status === 'paid' ? 'status-released' : 'status-pending';
     if (type === 'orCr') return status === 'released' ? 'status-released' : 'status-na-orcr';

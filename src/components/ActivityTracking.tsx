@@ -60,6 +60,8 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
     return result;
   }, [sales, search, sortKey, sortDir]);
 
+  const { paged, page, setPage, totalPages, totalItems, pageSize } = usePagination(filtered);
+
   const statusClass = (status: string, type: 'default' | 'ar' | 'orCr' = 'default') => {
     if (type === 'ar') return status === 'paid' ? 'status-released' : 'status-pending';
     if (type === 'orCr') return status === 'released' ? 'status-released' : 'status-na-orcr';
