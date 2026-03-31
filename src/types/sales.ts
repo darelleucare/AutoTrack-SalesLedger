@@ -97,8 +97,8 @@ export const DEFAULT_BANK_CHECKLIST = [
   'Promissory Note with Chattel Mortgage',
 ];
 
-export const CASH_COPO_EXCLUDED_DEALER_DOCS = ['Credit Advise Report'];
-export const CASH_COPO_EXCLUDED_ACCOUNTING_DOCS = ['Credit Application', 'Transmittal (Received by Bank)', 'Tracker (Transmitted)'];
+export const DEFAULT_ACCOUNTING_BANK_REQUIRED = ['Credit Application', 'Transmittal (Received by Bank)', 'Tracker (Transmitted)'];
+export const DEFAULT_DEALER_BANK_REQUIRED = ['Credit Advise Report'];
 
 export function isCashOrCopo(mode: PaymentMode): boolean {
   return mode === 'cash' || mode === 'copo';
