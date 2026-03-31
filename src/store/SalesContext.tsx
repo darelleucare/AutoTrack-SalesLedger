@@ -33,8 +33,11 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     try {
       const db = getDb();
       const savedSettings = db.data.settings || {};
-      // Merge with DEFAULT_SETTINGS to ensure new fields are included
-      return { ...DEFAULT_SETTINGS, ...savedSettings };
+      const merged = { ...DEFAULT_SETTINGS, ...savedSettings };
+      // Ensure new fields exist for backward compat
+      if (!merged.accountingBankRequired) merged.accountingBankRequired = [...DEFAULT_ACCOUNTING_BANK_REQUIRED];
+      if (!merged.dealerBankRequired) merged.dealerBankRequired = [...DEFAULT_DEALER_BANK_REQUIRED];
+      return merged;
     } catch {
       return DEFAULT_SETTINGS;
     }
