@@ -10,7 +10,7 @@ interface DashboardProps {
 export default function Dashboard({ onSelectSale }: DashboardProps) {
   const { sales } = useSales();
 
-  const totalReleased = sales.filter(s => s.bankStatus === 'released' && s.accountingStatus === 'released').length;
+  const totalReleased = sales.filter(s => s.dealerStatus === 'released' && s.accountingStatus === 'released' && s.ltoStatus === 'released' && s.orCrStatus === 'released').length;
   const totalGP = sales.reduce((sum, s) => sum + s.grp.reduce((a, b) => a + b, 0), 0);
   const bankPending = sales.filter(s => s.bankStatus === 'pending').length;
   const accPending = sales.filter(s => s.accountingStatus === 'pending').length;
