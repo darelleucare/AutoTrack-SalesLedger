@@ -132,7 +132,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
             {filtered.length === 0 && (
               <tr><td colSpan={13} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
             )}
-            {filtered.map(sale => {
+            {paged.map(sale => {
               const cashCopo = isCashOrCopo(sale.modeOfPayment);
               const bankMissing = getMissing(sale.documents.bank);
               const accMissing = getMissing(sale.documents.accounting);
