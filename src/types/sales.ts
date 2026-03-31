@@ -164,9 +164,9 @@ export const DEFAULT_BANK_CHECKLISTS: Record<string, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  theme: 'dark',
+  theme: 'light',
   dateFormat: 'us',
-  dateLength: 'short',
+  dateLength: 'long',
   groupCount: 3,
   groupNames: ['Group 1', 'Group 2', 'Group 3'],
   vehicleModels: ['AVP 1.6 GA MT' , 'AVP 1.6 GLX MT' , 'CARRY CAB & CHASSIS' , 'CARRY CARGO VAN' , 'CARRY DROPSIDE' ,
