@@ -27,7 +27,7 @@ export default function Dashboard({ onSelectSale }: DashboardProps) {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
-  const recent = sales.slice(0, 20);
+  const { paged: recent, page, setPage, totalPages, totalItems, pageSize } = usePagination(sales);
 
   return (
     <section id="dashboard" className="space-y-4">
