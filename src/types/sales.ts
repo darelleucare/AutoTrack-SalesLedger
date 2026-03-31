@@ -50,6 +50,8 @@ export interface AppSettings {
   dealerDocs: string[];
   ltoDocs: string[];
   bankChecklists: Record<string, string[]>;
+  accountingBankRequired: string[];
+  dealerBankRequired: string[];
 }
 
 // Legacy constants (kept for reference / backward compat)
