@@ -174,6 +174,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dealerDocs: [...DEALER_DOCS],
   ltoDocs: [...LTO_DOCS],
   bankChecklists: { ...DEFAULT_BANK_CHECKLISTS },
+  accountingBankRequired: [...DEFAULT_ACCOUNTING_BANK_REQUIRED],
+  dealerBankRequired: [...DEFAULT_DEALER_BANK_REQUIRED],
 };
 
 export function defaultGrp(count: number): number[] {
