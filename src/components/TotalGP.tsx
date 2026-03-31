@@ -149,7 +149,7 @@ export default function TotalGP() {
               {breakdowns.length === 0 && (
                 <tr><td colSpan={4} className="px-3 py-8 text-center text-muted-foreground">No records</td></tr>
               )}
-              {breakdowns.map((r, i) => (
+              {pagedBreakdowns.map((r, i) => (
                 <tr key={i} className="border-t border-border">
                   <td className="px-3 py-2 font-medium">{r.cs}</td>
                   <td className="px-3 py-2">Group {r.groupNumber}</td>
