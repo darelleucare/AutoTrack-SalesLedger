@@ -159,6 +159,7 @@ export default function TotalGP() {
               ))}
             </tbody>
           </table>
+          <TablePagination currentPage={bdPage} totalPages={bdTotalPages} onPageChange={setBdPage} totalItems={bdTotalItems} pageSize={bdPageSize} />
         </div>
       </div>
     </section>

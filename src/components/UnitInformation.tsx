@@ -180,6 +180,7 @@ export default function UnitInformation({ onSelectSale }: UnitInformationProps) 
             ))}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );

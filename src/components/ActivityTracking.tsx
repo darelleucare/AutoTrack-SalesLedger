@@ -318,6 +318,7 @@ export default function ActivityTracking({ onSelectSale }: ActivityTrackingProps
             })}
           </tbody>
         </table>
+        <TablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} totalItems={totalItems} pageSize={pageSize} />
       </div>
     </section>
   );
