@@ -91,7 +91,7 @@ export default function TotalGP() {
             )}
             {Object.entries(groups).sort(([a], [b]) => Number(a) - Number(b)).map(([grpNum, grpSales]) => {
               const gp = grpSales.reduce((sum, s) => sum + s.grp.reduce((a, b) => a + b, 0), 0);
-              const released = grpSales.filter(s => s.bankStatus === 'released' && s.accountingStatus === 'released').length;
+              const released = grpSales.filter(s => s.dealerStatus === 'released' && s.accountingStatus === 'released' && s.ltoStatus === 'released' && s.orCrStatus === 'released').length;
               return (
                 <tr key={grpNum} className="border-t border-border">
                   <td className="px-3 py-2 font-medium">Group {grpNum}</td>
