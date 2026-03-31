@@ -3,6 +3,8 @@ import { useSales } from '@/store/SalesContext';
 import { Sale, StatusType, ARStatusType, isCashOrCopo } from '@/types/sales';
 import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { usePagination } from '@/hooks/usePagination';
+import TablePagination from './TablePagination';
 
 interface ActivityTrackingProps {
   onSelectSale: (sale: Sale) => void;
